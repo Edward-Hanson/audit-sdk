@@ -36,8 +36,11 @@ no schema registry.
   `ProducerFactory` / `KafkaTemplate` beans.
 - **Auto-stamped fields** — `eventId` (for consumer-side dedup), `sourceService`, and
   `timestamp`.
-- **Distribution via JitPack**, sources + Javadoc jars, and a GitHub Actions build that
-  runs the full test suite (including an embedded-Kafka serialization test) on push/PR.
+- **Distribution via JitPack** — no credentials required. Coordinate:
+  `com.github.Edward-Hanson:audit-sdk:<version>` with the `https://jitpack.io`
+  repository. Ships sources + Javadoc jars, a Maven Wrapper (3.9.9) so JitPack builds
+  with a compatible Maven, and a GitHub Actions build that runs the full test suite
+  (including an embedded-Kafka serialization test) on push/PR.
 - **Apache License 2.0.**
 
 ### Requirements
@@ -45,6 +48,23 @@ no schema registry.
 - Java 17+
 - Spring Boot 3.x (built/tested against 3.3)
 - A reachable Kafka broker (kafka-clients 3.x, transitive via `spring-kafka`)
+
+### Install
+
+```xml
+<repositories>
+  <repository>
+    <id>jitpack.io</id>
+    <url>https://jitpack.io</url>
+  </repository>
+</repositories>
+
+<dependency>
+  <groupId>com.github.Edward-Hanson</groupId>
+  <artifactId>audit-sdk</artifactId>
+  <version>v0.1.0</version>
+</dependency>
+```
 
 [Unreleased]: https://github.com/Edward-Hanson/audit-sdk/compare/v0.1.0...HEAD
 [0.1.0]: https://github.com/Edward-Hanson/audit-sdk/releases/tag/v0.1.0
