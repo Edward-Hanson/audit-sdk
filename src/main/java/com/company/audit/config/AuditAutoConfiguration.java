@@ -21,6 +21,7 @@ import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.serializer.JsonSerializer;
 
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -78,7 +79,7 @@ public class AuditAutoConfiguration {
      * Not a {@code @Bean} — see the class-level note on bean isolation.
      */
     private DefaultKafkaProducerFactory<String, AuditEvent> auditProducerFactory(KafkaProperties kafkaProperties) {
-        Map<String, Object> props = new HashMap<>(kafkaProperties.buildProducerProperties(null));
+        Map<String, Object> props = new HashMap<>(baseProducerProperties(kafkaProperties));
         props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         props.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, true);
         props.put(ProducerConfig.ACKS_CONFIG, "all");
@@ -103,5 +104,34 @@ public class AuditAutoConfiguration {
         valueSerializer.setAddTypeInfo(false);
 
         return new DefaultKafkaProducerFactory<>(props, new StringSerializer(), valueSerializer);
+    }
+
+    /**
+     * Reads the app's Kafka producer settings from {@link KafkaProperties} in a way that
+     * works across all Spring Boot 3.x versions.
+     *
+     * <p>{@code KafkaProperties.buildProducerProperties} changed signature over the 3.x
+     * line — {@code buildProducerProperties()} in 3.0/3.1 (later removed) and
+     * {@code buildProducerProperties(SslBundles)} from 3.2 on — so no single compiled
+     * call runs everywhere. We invoke whichever overload the running Boot version
+     * exposes (passing null for any parameter), keeping the SDK compatible with any
+     * Spring Boot 3.x app without forcing a version.
+     */
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> baseProducerProperties(KafkaProperties kafkaProperties) {
+        for (Method method : KafkaProperties.class.getMethods()) {
+            if ("buildProducerProperties".equals(method.getName())
+                    && Map.class.isAssignableFrom(method.getReturnType())) {
+                try {
+                    return (Map<String, Object>) method.invoke(
+                            kafkaProperties, new Object[method.getParameterCount()]);
+                } catch (ReflectiveOperationException ex) {
+                    throw new IllegalStateException(
+                            "Failed to read Kafka producer properties from KafkaProperties", ex);
+                }
+            }
+        }
+        throw new IllegalStateException("KafkaProperties.buildProducerProperties(...) not found; "
+                + "unsupported spring-kafka / Spring Boot version");
     }
 }

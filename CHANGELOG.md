@@ -46,7 +46,8 @@ no schema registry.
 ### Requirements
 
 - Java 17+
-- Spring Boot 3.x (built/tested against 3.3)
+- Spring Boot 3.x — any 3.x version (built against 3.3, runs on 3.1+; the SDK adapts
+  to the app's Boot version rather than pinning one)
 - A reachable Kafka broker (kafka-clients 3.x, transitive via `spring-kafka`)
 
 ### Install

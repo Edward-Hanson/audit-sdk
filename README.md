@@ -7,7 +7,8 @@ before sending, then serializes it to JSON and produces it to Kafka.
 ## Requirements
 
 - **Java 17+**
-- **Spring Boot 3.x** (built and tested against 3.3)
+- **Spring Boot 3.x** — any 3.x version. The SDK adapts to your app's Spring Boot
+  version (built against 3.3, verified to run on 3.1+); it does not pin one for you.
 - **Kafka broker** reachable from your app; **kafka-clients 3.x** (arrives
   transitively via `spring-kafka` — see [Kafka client on the classpath](#kafka-client-on-the-classpath))
 
