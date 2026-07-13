@@ -196,3 +196,7 @@ plus `eventId`, `sourceService`, `timestamp` (auto-filled). Optional:
 - Commit the Kafka offset only after the DB write succeeds, so a crash re-reads
   rather than loses an event.
 - The value is plain JSON; deserialize into your own `AuditEvent` shape.
+
+## License
+
+Licensed under the [Apache License, Version 2.0](LICENSE).
