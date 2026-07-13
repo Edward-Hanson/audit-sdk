@@ -4,9 +4,9 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <!-- groupId follows the JitPack convention: com.github.<GitHub user>. -->
+    <!-- JitPack convention: groupId com.github.<user>, artifactId == repository name. -->
     <groupId>com.github.Edward-Hanson</groupId>
-    <artifactId>audit-sdk-spring-boot-starter</artifactId>
+    <artifactId>audit-sdk</artifactId>
     <version>0.1.0</version>
     <packaging>jar</packaging>
 

@@ -59,7 +59,7 @@ for the latest commit.
 
 <dependency>
     <groupId>com.github.Edward-Hanson</groupId>
-    <artifactId>audit-sdk-spring-boot-starter</artifactId>
+    <artifactId>audit-sdk</artifactId>
     <version>v0.1.0</version>
 </dependency>
 ```
@@ -78,7 +78,7 @@ repositories {
 }
 
 dependencies {
-    implementation("com.github.Edward-Hanson:audit-sdk-spring-boot-starter:v0.1.0")
+    implementation("com.github.Edward-Hanson:audit-sdk:v0.1.0")
 }
 ```
 </details>
