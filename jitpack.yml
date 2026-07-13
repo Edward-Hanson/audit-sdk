@@ -1,0 +1,8 @@
+# JitPack build config. https://jitpack.io/docs/BUILDING/
+# Build the SDK on JDK 17 and skip tests here — the full test suite (including the
+# embedded-Kafka test) already runs in GitHub Actions (.github/workflows/build.yml),
+# and running an embedded broker on JitPack's shared builders is slow/flaky.
+jdk:
+  - openjdk17
+install:
+  - mvn install -DskipTests -B

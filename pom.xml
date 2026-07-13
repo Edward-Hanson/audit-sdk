@@ -4,7 +4,8 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.company</groupId>
+    <!-- groupId follows the JitPack convention: com.github.<GitHub user>. -->
+    <groupId>com.github.Edward-Hanson</groupId>
     <artifactId>audit-sdk-spring-boot-starter</artifactId>
     <version>0.1.0</version>
     <packaging>jar</packaging>
@@ -93,22 +94,11 @@
     </dependencies>
 
     <!--
-      Publishing to GitHub Packages.
-      Published to https://maven.pkg.github.com/Edward-Hanson/audit-sdk
-      The <id> (github) must match a <server> entry in your ~/.m2/settings.xml.
+      Distribution: JitPack. There is no distributionManagement / deploy step —
+      JitPack builds this repo on demand (see jitpack.yml) and serves the artifacts
+      under groupId com.github.Edward-Hanson. Consumers just add the jitpack.io
+      repository and the dependency; no credentials.
     -->
-    <distributionManagement>
-        <repository>
-            <id>github</id>
-            <name>GitHub Packages</name>
-            <url>https://maven.pkg.github.com/Edward-Hanson/audit-sdk</url>
-        </repository>
-        <snapshotRepository>
-            <id>github</id>
-            <name>GitHub Packages</name>
-            <url>https://maven.pkg.github.com/Edward-Hanson/audit-sdk</url>
-        </snapshotRepository>
-    </distributionManagement>
 
     <build>
         <plugins>

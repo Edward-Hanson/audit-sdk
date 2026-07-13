@@ -42,77 +42,50 @@ before sending, then serializes it to JSON and produces it to Kafka.
 
 ## Install
 
-The SDK is published to **GitHub Packages**, which requires authentication to
-resolve (there is no anonymous download). Setup is a one-time thing per project.
+The SDK is distributed via **[JitPack](https://jitpack.io/#Edward-Hanson/audit-sdk)** —
+open source, **no credentials required**. Add the JitPack repository and the dependency.
+The `version` is a released tag of this repo (e.g. `v0.1.0`), or `master-SNAPSHOT`
+for the latest commit.
 
-**1. Add the dependency and the GitHub Packages repository** to your `pom.xml`:
+**Maven** (`pom.xml`):
 
 ```xml
-<dependencies>
-    <dependency>
-        <groupId>com.company</groupId>
-        <artifactId>audit-sdk-spring-boot-starter</artifactId>
-        <version>0.1.0</version>
-    </dependency>
-</dependencies>
-
 <repositories>
     <repository>
-        <id>github</id>
-        <url>https://maven.pkg.github.com/Edward-Hanson/audit-sdk</url>
+        <id>jitpack.io</id>
+        <url>https://jitpack.io</url>
     </repository>
 </repositories>
+
+<dependency>
+    <groupId>com.github.Edward-Hanson</groupId>
+    <artifactId>audit-sdk-spring-boot-starter</artifactId>
+    <version>v0.1.0</version>
+</dependency>
 ```
 
-**2. Authenticate.** Add a matching server to your `~/.m2/settings.xml`. The `<id>`
-must be `github` to match the repository above. Use a GitHub **Personal Access Token
-(classic)** with the `read:packages` scope as the password:
-
-```xml
-<settings>
-  <servers>
-    <server>
-      <id>github</id>
-      <username>YOUR_GITHUB_USERNAME</username>
-      <password>ghp_YOUR_READ_PACKAGES_TOKEN</password>
-    </server>
-  </servers>
-</settings>
-```
-
-**In CI (GitHub Actions), no PAT is needed** if the consuming repo is in the same
-org — use the built-in token via `actions/setup-java`:
-
-```yaml
-- uses: actions/setup-java@v4
-  with:
-    java-version: '17'
-    distribution: 'temurin'
-    server-id: github
-    server-username: GITHUB_ACTOR
-    server-password: GITHUB_TOKEN
-# then run your build with:  env: { GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} }
-```
+> `<repositories>` must be a direct child of `<project>` — a sibling of
+> `<dependencies>`, **not** nested inside it. A misplaced repository is silently
+> ignored, and Maven then reports the artifact "not found in central".
 
 <details>
 <summary>Gradle</summary>
 
 ```kotlin
 repositories {
-    maven {
-        url = uri("https://maven.pkg.github.com/Edward-Hanson/audit-sdk")
-        credentials {
-            username = System.getenv("GITHUB_ACTOR") ?: providers.gradleProperty("gpr.user").get()
-            password = System.getenv("GITHUB_TOKEN") ?: providers.gradleProperty("gpr.token").get()
-        }
-    }
+    mavenCentral()
+    maven { url = uri("https://jitpack.io") }
 }
 
 dependencies {
-    implementation("com.company:audit-sdk-spring-boot-starter:0.1.0")
+    implementation("com.github.Edward-Hanson:audit-sdk-spring-boot-starter:v0.1.0")
 }
 ```
 </details>
+
+The first time anyone requests a version, JitPack builds this repo on demand (see
+`jitpack.yml`) and caches the result; subsequent pulls are instant. Build status and
+available versions: https://jitpack.io/#Edward-Hanson/audit-sdk
 
 ### Kafka client on the classpath
 
