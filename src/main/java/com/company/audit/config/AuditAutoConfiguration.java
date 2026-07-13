@@ -93,7 +93,7 @@ public class AuditAutoConfiguration {
      * Not a {@code @Bean} — see the class-level note on bean isolation.
      */
     private DefaultKafkaProducerFactory<String, AuditEvent> auditProducerFactory(KafkaProperties kafkaProperties) {
-        Map<String, Object> props = new HashMap<>(baseProducerProperties(kafkaProperties));
+        Map<String, Object> props = new HashMap<>(invokeBuildProducerProperties(kafkaProperties));
         props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         props.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, true);
         props.put(ProducerConfig.ACKS_CONFIG, "all");
@@ -132,8 +132,11 @@ public class AuditAutoConfiguration {
      * Spring Boot 3.x app without forcing a version.
      */
     @SuppressWarnings("unchecked")
-    private Map<String, Object> baseProducerProperties(KafkaProperties kafkaProperties) {
-        for (Method method : KafkaProperties.class.getMethods()) {
+    static Map<String, Object> invokeBuildProducerProperties(Object kafkaProperties) {
+        // Reflect over the RUNTIME class so we bind to whatever overload the app's
+        // Spring Boot version actually ships (see the version note above). Package-private
+        // and static so it can be regression-tested against each version's method shape.
+        for (Method method : kafkaProperties.getClass().getMethods()) {
             if ("buildProducerProperties".equals(method.getName())
                     && Map.class.isAssignableFrom(method.getReturnType())) {
                 try {
