@@ -18,6 +18,13 @@ import java.time.Duration;
 @ConfigurationProperties(prefix = "audit")
 public class AuditProperties {
 
+    /**
+     * Master on/off switch. When false the SDK provides a no-op AuditClient that
+     * publishes nothing and creates no Kafka producer — useful for services that have
+     * no Kafka, or for turning auditing off per environment. Default true.
+     */
+    private boolean enabled = true;
+
     /** Name of the emitting application. Required. Stamped onto every event. */
     private String sourceService;
 
@@ -36,6 +43,9 @@ public class AuditProperties {
      * comfortably below any request/transaction timeout on the caller's side.
      */
     private Duration sendTimeout = Duration.ofSeconds(10);
+
+    public boolean isEnabled() { return enabled; }
+    public void setEnabled(boolean enabled) { this.enabled = enabled; }
 
     public String getSourceService() { return sourceService; }
     public void setSourceService(String sourceService) { this.sourceService = sourceService; }

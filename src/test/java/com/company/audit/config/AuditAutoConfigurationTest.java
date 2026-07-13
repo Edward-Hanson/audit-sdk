@@ -15,6 +15,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.Mockito.mock;
 
 /**
@@ -46,6 +47,22 @@ class AuditAutoConfigurationTest {
             assertThat(context.getBean(AuditProperties.class).getSourceService())
                     .isEqualTo("payroll");
         });
+    }
+
+    @Test
+    void auditEnabledFalseGivesANoOpClientAndNeedsNoConfig() {
+        // No source-service, no bootstrap-servers — a disabled service should still
+        // wire up cleanly and send() must be a harmless no-op.
+        new ApplicationContextRunner()
+                .withConfiguration(AutoConfigurations.of(
+                        KafkaAutoConfiguration.class, AuditAutoConfiguration.class))
+                .withPropertyValues("audit.enabled=false")
+                .run(context -> {
+                    assertThat(context).hasSingleBean(AuditClient.class);
+                    assertThatCode(() -> context.getBean(AuditClient.class)
+                            .send(new com.company.audit.model.AuditEvent()))
+                            .doesNotThrowAnyException();
+                });
     }
 
     @Test

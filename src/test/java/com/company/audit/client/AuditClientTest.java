@@ -198,6 +198,15 @@ class AuditClientTest {
     }
 
     @Test
+    void disabledClientPublishesNothing() {
+        AuditClient disabled = AuditClient.disabled();
+
+        // No exception even for an "invalid" event, and nothing is sent.
+        assertThatCode(() -> disabled.send(new AuditEvent())).doesNotThrowAnyException();
+        verify(kafkaTemplate, never()).send(anyString(), any(AuditEvent.class));
+    }
+
+    @Test
     void inTransactionNothingIsPublishedOnRollback() {
         templateSucceeds();
         TransactionSynchronizationManager.initSynchronization();

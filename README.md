@@ -88,6 +88,35 @@ The first time anyone requests a version, JitPack builds this repo on demand (se
 `jitpack.yml`) and caches the result; subsequent pulls are instant. Build status and
 available versions: https://jitpack.io/#Edward-Hanson/audit-sdk
 
+### Tracking the latest `master` (snapshots)
+
+Released tags (`v0.1.0`, …) are **immutable** — recommended for production. To instead
+follow the latest `master` and pick up new commits when you rebuild, depend on
+`master-SNAPSHOT` and tell Maven to always re-check JitPack for a fresh build:
+
+```xml
+<repositories>
+    <repository>
+        <id>jitpack.io</id>
+        <url>https://jitpack.io</url>
+        <snapshots>
+            <enabled>true</enabled>
+            <updatePolicy>always</updatePolicy>
+        </snapshots>
+    </repository>
+</repositories>
+
+<dependency>
+    <groupId>com.github.Edward-Hanson</groupId>
+    <artifactId>audit-sdk</artifactId>
+    <version>master-SNAPSHOT</version>
+</dependency>
+```
+
+With `updatePolicy=always`, each build re-checks JitPack; combined with JitPack
+rebuilding `master-SNAPSHOT` on every push, a rebuild picks up your latest `master`.
+Force it any time with `mvn -U`.
+
 ### Kafka client on the classpath
 
 The SDK depends on `spring-kafka` (compile scope), which brings `kafka-clients`
@@ -108,10 +137,16 @@ spring:
     bootstrap-servers: localhost:9092
 
 audit:
-  source-service: payroll     # required — identifies this app
+  enabled: true               # optional (default: true) — false = no-op, no Kafka needed
+  source-service: payroll     # required (when enabled) — identifies this app
   fail-on-error: false        # optional (default: false)
   send-timeout: 10s           # optional (default: 10s) — only used when fail-on-error=true
 ```
+
+Set `audit.enabled=false` to turn the SDK into a no-op: `AuditClient` is still
+injectable and `send(...)` calls are safe, but nothing is published and **no Kafka
+producer is created** — so a service with no Kafka can keep the SDK on its classpath
+without errors. Handy for local dev, tests, or environments where auditing is off.
 
 ### Transactions
 

@@ -14,6 +14,7 @@ import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -55,6 +56,7 @@ public class AuditAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
+    @ConditionalOnProperty(prefix = "audit", name = "enabled", havingValue = "true", matchIfMissing = true)
     public AuditClient auditClient(KafkaProperties kafkaProperties,
                                    AuditProperties auditProperties,
                                    Validator auditValidator) {
@@ -67,6 +69,18 @@ public class AuditAutoConfiguration {
         // AuditClient owns the producer factory's lifecycle: as a Spring bean it will
         // have destroy() invoked on context shutdown, which closes the producer cleanly.
         return new AuditClient(kafkaTemplate, producerFactory, auditProperties, auditValidator);
+    }
+
+    /**
+     * When {@code audit.enabled=false}, expose a no-op client so apps keep their
+     * {@code auditClient.send(...)} calls in place while nothing is published and no
+     * Kafka producer is created (no broker required).
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnProperty(prefix = "audit", name = "enabled", havingValue = "false")
+    public AuditClient disabledAuditClient() {
+        return AuditClient.disabled();
     }
 
     /**

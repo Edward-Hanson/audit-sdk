@@ -36,6 +36,9 @@ no schema registry.
   `ProducerFactory` / `KafkaTemplate` beans.
 - **Auto-stamped fields** — `eventId` (for consumer-side dedup), `sourceService`, and
   `timestamp`.
+- **`audit.enabled` toggle** — set `false` for a no-op `AuditClient` that publishes
+  nothing and creates no Kafka producer (for services with no Kafka, or to switch
+  auditing off per environment). Default `true`.
 - **Distribution via JitPack** — no credentials required. Coordinate:
   `com.github.Edward-Hanson:audit-sdk:<version>` with the `https://jitpack.io`
   repository. Ships sources + Javadoc jars, a Maven Wrapper (3.9.9) so JitPack builds

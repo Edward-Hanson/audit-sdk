@@ -49,6 +49,7 @@ public class AuditClient implements DisposableBean {
      */
     public static final String TOPIC = "audit-service";
 
+    private final boolean enabled;
     private final KafkaTemplate<String, AuditEvent> kafkaTemplate;
     private final AuditProperties properties;
     private final Validator validator;
@@ -69,6 +70,7 @@ public class AuditClient implements DisposableBean {
                        DefaultKafkaProducerFactory<String, AuditEvent> producerFactory,
                        AuditProperties properties,
                        Validator validator) {
+        this.enabled = true;
         this.kafkaTemplate = kafkaTemplate;
         this.ownedProducerFactory = producerFactory;
         this.properties = properties;
@@ -86,7 +88,33 @@ public class AuditClient implements DisposableBean {
         this(kafkaTemplate, null, properties, validator);
     }
 
+    /** No-op constructor used when {@code audit.enabled=false}. Touches no Kafka. */
+    private AuditClient() {
+        this.enabled = false;
+        this.kafkaTemplate = null;
+        this.ownedProducerFactory = null;
+        this.properties = null;
+        this.validator = null;
+    }
+
+    /**
+     * A disabled client: {@link #send} does nothing and no Kafka producer is created.
+     * Used when {@code audit.enabled=false} so a service with no Kafka can keep its
+     * {@code auditClient.send(...)} calls in place as clean no-ops.
+     */
+    public static AuditClient disabled() {
+        return new AuditClient();
+    }
+
     public void send(AuditEvent event) {
+        if (!enabled) {
+            if (log.isDebugEnabled()) {
+                log.debug("Auditing disabled (audit.enabled=false); skipping event action={}",
+                        event.getAction());
+            }
+            return;
+        }
+
         // Stamp + validate synchronously so the caller gets immediate feedback
         // (AuditValidationException) regardless of any surrounding transaction.
         stampDefaults(event);
