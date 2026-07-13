@@ -5,4 +5,6 @@
 jdk:
   - openjdk17
 install:
-  - mvn install -DskipTests -B
+  # Use the Maven Wrapper (pinned to 3.9.9) — JitPack's system Maven is too old for
+  # maven-compiler-plugin 3.13.0 (needs Maven >= 3.6.3).
+  - ./mvnw install -DskipTests -B
