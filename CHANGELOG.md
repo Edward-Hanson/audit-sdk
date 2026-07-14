@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 _Nothing yet._
 
+## [0.1.1] - 2026-07-14
+
+### Changed
+
+- **Audit topic renamed** from `audit-service` to `audit_service` to match the
+  provisioned Kafka topic. Upgrade to `v0.1.1`; events now publish to `audit_service`.
+  (Consumers of the audit topic must read from `audit_service`.)
+
 ## [0.1.0] - 2026-07-13
 
 First public release — a thin Spring Boot starter for publishing validated audit
@@ -66,9 +74,10 @@ no schema registry.
 <dependency>
   <groupId>com.github.Edward-Hanson</groupId>
   <artifactId>audit-sdk</artifactId>
-  <version>v0.1.0</version>
+  <version>v0.1.1</version>
 </dependency>
 ```
 
-[Unreleased]: https://github.com/Edward-Hanson/audit-sdk/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/Edward-Hanson/audit-sdk/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/Edward-Hanson/audit-sdk/releases/tag/v0.1.1
 [0.1.0]: https://github.com/Edward-Hanson/audit-sdk/releases/tag/v0.1.0

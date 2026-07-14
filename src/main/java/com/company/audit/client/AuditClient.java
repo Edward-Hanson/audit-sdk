@@ -47,7 +47,7 @@ public class AuditClient implements DisposableBean {
      * configurable — this guarantees all audit events land on one governed topic and
      * no consuming team can redirect them via config.
      */
-    public static final String TOPIC = "audit-service";
+    public static final String TOPIC = "audit_service";
 
     private final boolean enabled;
     private final KafkaTemplate<String, AuditEvent> kafkaTemplate;

@@ -76,7 +76,7 @@ class AuditClientTest {
 
         // Topic is the SDK-owned constant; no key is passed, so Kafka's sticky
         // partitioner spreads events evenly (ordering is not required).
-        assertThat(AuditClient.TOPIC).isEqualTo("audit-service");
+        assertThat(AuditClient.TOPIC).isEqualTo("audit_service");
         verify(kafkaTemplate).send(eq(AuditClient.TOPIC), eq(event));
     }
 

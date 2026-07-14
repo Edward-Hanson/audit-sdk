@@ -61,7 +61,7 @@ for the latest commit.
 <dependency>
     <groupId>com.github.Edward-Hanson</groupId>
     <artifactId>audit-sdk</artifactId>
-    <version>v0.1.0</version>
+    <version>v0.1.1</version>
 </dependency>
 ```
 
@@ -79,7 +79,7 @@ repositories {
 }
 
 dependencies {
-    implementation("com.github.Edward-Hanson:audit-sdk:v0.1.0")
+    implementation("com.github.Edward-Hanson:audit-sdk:v0.1.1")
 }
 ```
 </details>
@@ -186,7 +186,7 @@ event can't be sent.
   `send-timeout` below your request/transaction timeout.
 
 The destination topic is **not configurable** — it is fixed by the SDK
-(`audit-service`) so every service publishes to the same governed topic and no
+(`audit_service`) so every service publishes to the same governed topic and no
 team can redirect events. There is no `audit.topic` property.
 
 ## Use
