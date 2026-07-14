@@ -61,7 +61,7 @@ for the latest commit.
 <dependency>
     <groupId>com.github.Edward-Hanson</groupId>
     <artifactId>audit-sdk</artifactId>
-    <version>v0.1.1</version>
+    <version>v0.2.0</version>
 </dependency>
 ```
 
@@ -79,7 +79,7 @@ repositories {
 }
 
 dependencies {
-    implementation("com.github.Edward-Hanson:audit-sdk:v0.1.1")
+    implementation("com.github.Edward-Hanson:audit-sdk:v0.2.0")
 }
 ```
 </details>
@@ -207,23 +207,48 @@ public class SalaryService {
         auditClient.send(AuditEventBuilder.builder()
                 .userName("jane.admin")
                 .userId(42L)
-                .action("SALARY_CHANGED")
+                .action(AuditAction.UPDATE)
                 .entityType("EMPLOYEE")
                 .entityId(e.getId().toString())
                 .entityName(e.getName())
-                .organizationId(1)
+                .organizationId(1)                       // optional
                 .details("Adjusted annual salary")
-                .payload(Map.of("old", oldSalary, "new", newSalary))
+                .oldPayload(Map.of("salary", oldSalary)) // state before
+                .newPayload(Map.of("salary", newSalary)) // state after
+                .payloadDifference(Map.of("salary", newSalary.subtract(oldSalary)))
                 .build());
     }
 }
 ```
 
-## Required fields (validated by the SDK)
+## Fields
 
-`userName`, `userId`, `entityId`, `entityType`, `action`, `organizationId`,
-plus `eventId`, `sourceService`, `timestamp` (auto-filled). Optional:
-`entityName`, `details`, `currentPayload`, `payload`, `changedPayload`.
+**Required (validated by the SDK):** `userName`, `userId`, `entityId`, `entityType`,
+`action`.
+
+**Auto-filled by the SDK:** `eventId`, `sourceService`, `timestamp`.
+
+**Optional:** `organizationId`, `entityName`, `details`, `oldPayload` (state before),
+`newPayload` (state after), `payloadDifference` (the delta).
+
+### `action` — controlled vocabulary
+
+`action` is the `AuditAction` enum (auditing targets state/data changes; reads are not
+audited). Allowed values:
+
+```
+CREATE, UPDATE, DELETE,
+ARCHIVE, UNARCHIVE,
+ACTIVATE, DEACTIVATE,
+SUBMIT, APPROVE, REJECT, DENY, CANCEL,
+ASSIGN, UNASSIGN,
+LOCK, UNLOCK, SUSPEND, RESTORE,
+PUBLISH, UNPUBLISH,
+GRANT, REVOKE
+```
+
+Need another state-change action? Add it to `AuditAction` and release a new SDK
+version so the vocabulary stays governed across all services.
 
 ## Notes for the consumer (audit service)
 

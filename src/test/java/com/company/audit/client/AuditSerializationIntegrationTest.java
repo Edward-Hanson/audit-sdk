@@ -1,6 +1,7 @@
 package com.company.audit.client;
 
 import com.company.audit.config.AuditAutoConfiguration;
+import com.company.audit.model.AuditAction;
 import com.company.audit.model.AuditEventBuilder;
 
 import org.apache.kafka.clients.consumer.Consumer;
@@ -53,13 +54,15 @@ class AuditSerializationIntegrationTest {
                     client.send(AuditEventBuilder.builder()
                             .userName("jane.admin")
                             .userId(42L)
-                            .action("SALARY_CHANGED")
+                            .action(AuditAction.UPDATE)
                             .entityType("EMPLOYEE")
                             .entityId("99")
                             .entityName("Jane")
                             .organizationId(1)
                             .details("Adjusted annual salary")
-                            .payload(Map.of("old", 100, "new", 120))
+                            .oldPayload(Map.of("salary", 100))
+                            .newPayload(Map.of("salary", 120))
+                            .payloadDifference(Map.of("salary", 20))
                             .timestamp(ts)
                             .build());
 
@@ -76,11 +79,16 @@ class AuditSerializationIntegrationTest {
                             .contains("\"sourceService\":\"payroll\"")
                             .contains("\"userName\":\"jane.admin\"")
                             .contains("\"userId\":42")
-                            .contains("\"action\":\"SALARY_CHANGED\"")
+                            // Enum serialized by name.
+                            .contains("\"action\":\"UPDATE\"")
                             .contains("\"entityType\":\"EMPLOYEE\"")
                             .contains("\"entityId\":\"99\"")
                             .contains("\"organizationId\":1")
                             .contains("\"eventId\":")
+                            // Renamed payload fields.
+                            .contains("\"oldPayload\":")
+                            .contains("\"newPayload\":")
+                            .contains("\"payloadDifference\":")
                             // Instant serialized as ISO-8601, NOT epoch millis.
                             .contains("\"timestamp\":\"2026-07-13T10:15:30Z\"")
                             .doesNotContain("__TypeId__");

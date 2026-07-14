@@ -2,6 +2,7 @@ package com.company.audit.client;
 
 import com.company.audit.config.AuditProperties;
 import com.company.audit.exception.AuditValidationException;
+import com.company.audit.model.AuditAction;
 import com.company.audit.model.AuditEvent;
 import com.company.audit.model.AuditEventBuilder;
 
@@ -55,7 +56,7 @@ class AuditClientTest {
         return AuditEventBuilder.builder()
                 .userName("jane.admin")
                 .userId(42L)
-                .action("SALARY_CHANGED")
+                .action(AuditAction.UPDATE)
                 .entityType("EMPLOYEE")
                 .entityId("99")
                 .organizationId(1)
@@ -118,16 +119,31 @@ class AuditClientTest {
     @Test
     void rejectsInvalidEventWithFieldNamesAndDoesNotSend() {
         AuditEvent event = AuditEventBuilder.builder()
-                .action("SALARY_CHANGED")
-                .build(); // missing userName, userId, entityId, entityType, organizationId
+                .action(AuditAction.UPDATE)
+                .build(); // missing required userName, userId, entityId, entityType (organizationId is optional)
 
         assertThatThrownBy(() -> client.send(event))
                 .isInstanceOf(AuditValidationException.class)
                 .hasMessageContaining("userName")
                 .hasMessageContaining("userId")
                 .hasMessageContaining("entityId")
-                .hasMessageContaining("entityType")
-                .hasMessageContaining("organizationId");
+                .hasMessageContaining("entityType");
+
+        verify(kafkaTemplate, never()).send(anyString(), any(AuditEvent.class));
+    }
+
+    @Test
+    void rejectsEventWithNoAction() {
+        // The action vocabulary is enforced at compile time by the AuditAction enum;
+        // presence is enforced here at runtime.
+        AuditEvent event = AuditEventBuilder.builder()
+                .userName("jane.admin").userId(42L)
+                .entityType("EMPLOYEE").entityId("99")
+                .build(); // no action
+
+        assertThatThrownBy(() -> client.send(event))
+                .isInstanceOf(AuditValidationException.class)
+                .hasMessageContaining("action");
 
         verify(kafkaTemplate, never()).send(anyString(), any(AuditEvent.class));
     }

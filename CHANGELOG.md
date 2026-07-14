@@ -9,6 +9,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 _Nothing yet._
 
+## [0.2.0] - 2026-07-14
+
+Breaking schema changes — upgrade requires code changes at call sites and a matching
+update on the audit-consumer side.
+
+### Changed
+
+- **`action` is now the `AuditAction` enum**, not a free String — restricting audit
+  events to a governed vocabulary of state/data-change actions: `CREATE, UPDATE,
+  DELETE, ARCHIVE, UNARCHIVE, ACTIVATE, DEACTIVATE, SUBMIT, APPROVE, REJECT, DENY,
+  CANCEL, ASSIGN, UNASSIGN, LOCK, UNLOCK, SUSPEND, RESTORE, PUBLISH, UNPUBLISH, GRANT,
+  REVOKE`. (Reads are not audited.)
+- **Payload fields renamed** for clarity:
+  - `currentPayload` → `newPayload` (state after the change)
+  - `changedPayload` → `oldPayload` (state before the change)
+  - `payload` → `payloadDifference` (the delta)
+- **`organizationId` is now optional** (was required).
+
+### Migration
+
+- Replace `.action("SOME_STRING")` with `.action(AuditAction.X)`.
+- Rename builder calls: `.currentPayload(..)` → `.newPayload(..)`,
+  `.changedPayload(..)` → `.oldPayload(..)`, `.payload(..)` → `.payloadDifference(..)`.
+- The JSON on the topic changes accordingly (`action` is an enum name; renamed payload
+  keys) — update the audit-consumer's mapping.
+
 ## [0.1.1] - 2026-07-14
 
 ### Changed
@@ -78,6 +104,7 @@ no schema registry.
 </dependency>
 ```
 
-[Unreleased]: https://github.com/Edward-Hanson/audit-sdk/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/Edward-Hanson/audit-sdk/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/Edward-Hanson/audit-sdk/releases/tag/v0.2.0
 [0.1.1]: https://github.com/Edward-Hanson/audit-sdk/releases/tag/v0.1.1
 [0.1.0]: https://github.com/Edward-Hanson/audit-sdk/releases/tag/v0.1.0

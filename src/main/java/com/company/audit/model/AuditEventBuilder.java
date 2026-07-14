@@ -20,12 +20,12 @@ public final class AuditEventBuilder {
     public AuditEventBuilder entityId(String v) { event.setEntityId(v); return this; }
     public AuditEventBuilder entityType(String v) { event.setEntityType(v); return this; }
     public AuditEventBuilder entityName(String v) { event.setEntityName(v); return this; }
-    public AuditEventBuilder action(String v) { event.setAction(v); return this; }
+    public AuditEventBuilder action(AuditAction v) { event.setAction(v); return this; }
     public AuditEventBuilder details(String v) { event.setDetails(v); return this; }
     public AuditEventBuilder organizationId(Integer v) { event.setOrganizationId(v); return this; }
-    public AuditEventBuilder currentPayload(Map<String, Object> v) { event.setCurrentPayload(v); return this; }
-    public AuditEventBuilder payload(Map<String, Object> v) { event.setPayload(v); return this; }
-    public AuditEventBuilder changedPayload(Map<String, Object> v) { event.setChangedPayload(v); return this; }
+    public AuditEventBuilder newPayload(Map<String, Object> v) { event.setNewPayload(v); return this; }
+    public AuditEventBuilder payloadDifference(Map<String, Object> v) { event.setPayloadDifference(v); return this; }
+    public AuditEventBuilder oldPayload(Map<String, Object> v) { event.setOldPayload(v); return this; }
     public AuditEventBuilder timestamp(Instant v) { event.setTimestamp(v); return this; }
 
     public AuditEvent build() {

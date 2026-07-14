@@ -41,19 +41,23 @@ public class AuditEvent {
 
     private String entityName;
 
-    @NotBlank
-    private String action;
+    /** What happened. Restricted to the {@link AuditAction} vocabulary. */
+    @NotNull
+    private AuditAction action;
 
     private String details;
 
-    @NotNull
+    /** Owning organization. Optional. */
     private Integer organizationId;
 
-    private Map<String, Object> currentPayload;
+    /** State AFTER the change. Optional. */
+    private Map<String, Object> newPayload;
 
-    private Map<String, Object> payload;
+    /** The delta between old and new state. Optional. */
+    private Map<String, Object> payloadDifference;
 
-    private Map<String, Object> changedPayload;
+    /** State BEFORE the change. Optional. */
+    private Map<String, Object> oldPayload;
 
     /** Event time (UTC instant). Defaults to now if not set. */
     @NotNull
@@ -85,8 +89,8 @@ public class AuditEvent {
     public String getEntityName() { return entityName; }
     public void setEntityName(String entityName) { this.entityName = entityName; }
 
-    public String getAction() { return action; }
-    public void setAction(String action) { this.action = action; }
+    public AuditAction getAction() { return action; }
+    public void setAction(AuditAction action) { this.action = action; }
 
     public String getDetails() { return details; }
     public void setDetails(String details) { this.details = details; }
@@ -94,14 +98,14 @@ public class AuditEvent {
     public Integer getOrganizationId() { return organizationId; }
     public void setOrganizationId(Integer organizationId) { this.organizationId = organizationId; }
 
-    public Map<String, Object> getCurrentPayload() { return currentPayload; }
-    public void setCurrentPayload(Map<String, Object> currentPayload) { this.currentPayload = currentPayload; }
+    public Map<String, Object> getNewPayload() { return newPayload; }
+    public void setNewPayload(Map<String, Object> newPayload) { this.newPayload = newPayload; }
 
-    public Map<String, Object> getPayload() { return payload; }
-    public void setPayload(Map<String, Object> payload) { this.payload = payload; }
+    public Map<String, Object> getPayloadDifference() { return payloadDifference; }
+    public void setPayloadDifference(Map<String, Object> payloadDifference) { this.payloadDifference = payloadDifference; }
 
-    public Map<String, Object> getChangedPayload() { return changedPayload; }
-    public void setChangedPayload(Map<String, Object> changedPayload) { this.changedPayload = changedPayload; }
+    public Map<String, Object> getOldPayload() { return oldPayload; }
+    public void setOldPayload(Map<String, Object> oldPayload) { this.oldPayload = oldPayload; }
 
     public Instant getTimestamp() { return timestamp; }
     public void setTimestamp(Instant timestamp) { this.timestamp = timestamp; }
