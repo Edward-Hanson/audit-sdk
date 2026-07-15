@@ -42,12 +42,8 @@ public class AuditClient implements DisposableBean {
 
     private static final Logger log = LoggerFactory.getLogger(AuditClient.class);
 
-    /**
-     * The single audit topic every service publishes to. Owned by the SDK and NOT
-     * configurable — this guarantees all audit events land on one governed topic and
-     * no consuming team can redirect them via config.
-     */
-    public static final String TOPIC = "audit_service";
+    /** The audit topic to publish to — supplied from {@code audit.kafka.topic} config. */
+    private final String topic;
 
     private final boolean enabled;
     private final KafkaTemplate<String, AuditEvent> kafkaTemplate;
@@ -66,11 +62,13 @@ public class AuditClient implements DisposableBean {
      * Full constructor used by the auto-configuration: the client owns and closes
      * {@code producerFactory} on shutdown.
      */
-    public AuditClient(KafkaTemplate<String, AuditEvent> kafkaTemplate,
+    public AuditClient(String topic,
+                       KafkaTemplate<String, AuditEvent> kafkaTemplate,
                        DefaultKafkaProducerFactory<String, AuditEvent> producerFactory,
                        AuditProperties properties,
                        Validator validator) {
         this.enabled = true;
+        this.topic = topic;
         this.kafkaTemplate = kafkaTemplate;
         this.ownedProducerFactory = producerFactory;
         this.properties = properties;
@@ -82,15 +80,17 @@ public class AuditClient implements DisposableBean {
      * (e.g. tests, or an app supplying its own {@code KafkaTemplate}). No producer
      * factory is closed on shutdown.
      */
-    public AuditClient(KafkaTemplate<String, AuditEvent> kafkaTemplate,
+    public AuditClient(String topic,
+                       KafkaTemplate<String, AuditEvent> kafkaTemplate,
                        AuditProperties properties,
                        Validator validator) {
-        this(kafkaTemplate, null, properties, validator);
+        this(topic, kafkaTemplate, null, properties, validator);
     }
 
     /** No-op constructor used when {@code audit.enabled=false}. Touches no Kafka. */
     private AuditClient() {
         this.enabled = false;
+        this.topic = null;
         this.kafkaTemplate = null;
         this.ownedProducerFactory = null;
         this.properties = null;
@@ -158,12 +158,12 @@ public class AuditClient implements DisposableBean {
         try {
             // Null key: per-entity ordering is not required, so we let Kafka's sticky
             // partitioner spread events evenly across the topic's partitions.
-            kafkaTemplate.send(TOPIC, event)
+            kafkaTemplate.send(topic, event)
                     .whenComplete((result, ex) -> {
                         if (ex != null) {
                             logFailure(event, ex);
                         } else if (log.isDebugEnabled()) {
-                            log.debug("Audit event {} sent to {}", event.getEventId(), TOPIC);
+                            log.debug("Audit event {} sent to {}", event.getEventId(), topic);
                         }
                     });
         } catch (Exception ex) {
@@ -180,10 +180,10 @@ public class AuditClient implements DisposableBean {
      */
     private void sendAndWait(AuditEvent event) {
         try {
-            kafkaTemplate.send(TOPIC, event)
+            kafkaTemplate.send(topic, event)
                     .get(properties.getSendTimeout().toMillis(), TimeUnit.MILLISECONDS);
             if (log.isDebugEnabled()) {
-                log.debug("Audit event {} sent to {}", event.getEventId(), TOPIC);
+                log.debug("Audit event {} sent to {}", event.getEventId(), topic);
             }
         } catch (InterruptedException ex) {
             Thread.currentThread().interrupt();

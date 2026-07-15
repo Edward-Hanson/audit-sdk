@@ -29,8 +29,10 @@ import static org.assertj.core.api.Assertions.assertThat;
  * SDK's actual producer path — JavaTime-aware JSON serializer, {@code addTypeInfo=false},
  * null key — produces the exact wire format the audit consumer expects.
  */
-@EmbeddedKafka(partitions = 4, topics = AuditClient.TOPIC)
+@EmbeddedKafka(partitions = 4, topics = AuditSerializationIntegrationTest.TOPIC)
 class AuditSerializationIntegrationTest {
+
+    static final String TOPIC = "audit_service_it";
 
     @Test
     void publishesCleanJsonWithIso8601TimestampAndNoKey() {
@@ -43,11 +45,18 @@ class AuditSerializationIntegrationTest {
                 .withPropertyValues(
                         "audit.source-service=payroll",
                         "entra.client-id=payroll-client-id",
+                        // Registration config (validated at refresh; the ApplicationRunner
+                        // that makes the real HTTP call is not triggered by the context runner).
+                        "entra.client-secret=shhh",
+                        "entra.tenant-id=tenant-123",
+                        "audit.url=https://audit.internal",
+                        // Dedicated audit broker + topic (embedded broker for the test).
+                        "audit.kafka.servers=" + bootstrap,
+                        "audit.kafka.topic=" + TOPIC,
                         // Block until the broker acks so the record is on the topic
                         // before we consume — makes the assertion deterministic.
                         "audit.fail-on-error=true",
-                        "audit.send-timeout=15s",
-                        "spring.kafka.bootstrap-servers=" + bootstrap)
+                        "audit.send-timeout=15s")
                 .run(context -> {
                     AuditClient client = context.getBean(AuditClient.class);
 
@@ -105,8 +114,8 @@ class AuditSerializationIntegrationTest {
 
         try (Consumer<String, String> consumer =
                      new DefaultKafkaConsumerFactory<String, String>(consumerProps).createConsumer()) {
-            consumer.subscribe(java.util.List.of(AuditClient.TOPIC));
-            return KafkaTestUtils.getSingleRecord(consumer, AuditClient.TOPIC, Duration.ofSeconds(15));
+            consumer.subscribe(java.util.List.of(TOPIC));
+            return KafkaTestUtils.getSingleRecord(consumer, TOPIC, Duration.ofSeconds(15));
         }
     }
 }

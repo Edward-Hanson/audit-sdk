@@ -9,6 +9,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 _Nothing yet._
 
+## [0.4.0] - 2026-07-15
+
+Breaking configuration change — the audit destination is no longer baked into the SDK.
+
+### Changed
+
+- **The audit broker and topic are now required config, not hardcoded.** Removed the
+  hardcoded `AuditClient.TOPIC` constant. The SDK now publishes to `audit.kafka.topic`
+  on the dedicated broker `audit.kafka.servers` — **independent of the app's
+  `spring.kafka.*`** — so each environment (dev/stage/prod) points at its own
+  cluster/topic and can't cross-publish.
+- **Fail-fast at startup** (when `audit.enabled=true`) if any of these are missing:
+  `audit.kafka.servers`, `audit.kafka.topic`, `audit.source-service`, `entra.client-id`.
+  (`source-service` is now checked at startup, not only per-send.)
+
+### Added
+
+- **Startup registration with the audit service.** When enabled, the SDK registers the
+  application once at startup, before any events are published: it obtains a Microsoft
+  Entra client-credentials token and calls `POST {audit.url}/register` with it as a
+  `Bearer` header (no body). If registration fails, the application fails to start.
+  Uses the JDK HTTP client (no new dependency).
+- **New required properties** (when enabled): `entra.client-secret`, `entra.tenant-id`,
+  `audit.url` (join the existing `entra.client-id`). Optional: `entra.scope`
+  (default `<client-id>/.default`) and `entra.authority` (default Azure public cloud).
+- **`audit.kafka.properties`** — optional pass-through map for producer settings
+  (e.g. `security.protocol`, `sasl.*`) so a secured audit broker can be configured
+  per environment without code changes.
+
+### Removed
+
+- Internal `KafkaProperties.buildProducerProperties(...)` reflection (and its
+  compatibility test) — the SDK no longer reads the app's `spring.kafka.*`, so the
+  version-sensitive API is no longer used.
+
+### Migration
+
+- Add `audit.kafka.servers`, `audit.kafka.topic`, `audit.url`, `entra.client-secret`,
+  and `entra.tenant-id` to every service using the SDK (per environment), or it will
+  fail to start once upgraded. The SDK no longer uses `spring.kafka.bootstrap-servers`
+  for audit.
+- The audit service must expose `POST /register` (validating the Entra bearer token)
+  before consumers upgrade — the SDK calls it at startup and fails to start if it 404s
+  or errors.
+
 ## [0.3.0] - 2026-07-15
 
 ### Added
@@ -118,7 +163,8 @@ no schema registry.
 </dependency>
 ```
 
-[Unreleased]: https://github.com/Edward-Hanson/audit-sdk/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/Edward-Hanson/audit-sdk/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/Edward-Hanson/audit-sdk/releases/tag/v0.4.0
 [0.3.0]: https://github.com/Edward-Hanson/audit-sdk/releases/tag/v0.3.0
 [0.2.0]: https://github.com/Edward-Hanson/audit-sdk/releases/tag/v0.2.0
 [0.1.1]: https://github.com/Edward-Hanson/audit-sdk/releases/tag/v0.1.1

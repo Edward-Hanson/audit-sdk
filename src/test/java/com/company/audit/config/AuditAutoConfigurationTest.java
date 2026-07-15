@@ -14,6 +14,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.Mockito.mock;
@@ -31,13 +34,30 @@ import static org.mockito.Mockito.mock;
  */
 class AuditAutoConfigurationTest {
 
-    private final ApplicationContextRunner runner = new ApplicationContextRunner()
-            .withConfiguration(AutoConfigurations.of(
-                    KafkaAutoConfiguration.class, AuditAutoConfiguration.class))
-            .withPropertyValues(
-                    "audit.source-service=payroll",
-                    "entra.client-id=payroll-client-id",
-                    "spring.kafka.bootstrap-servers=localhost:9092");
+    /** A complete, valid set of required properties (keyed by property name). */
+    private static Map<String, String> validProps() {
+        Map<String, String> p = new LinkedHashMap<>();
+        p.put("audit.source-service", "payroll");
+        p.put("entra.client-id", "payroll-client-id");
+        p.put("entra.client-secret", "shhh");
+        p.put("entra.tenant-id", "tenant-123");
+        p.put("audit.url", "https://audit.internal");
+        p.put("audit.kafka.servers", "localhost:9092");
+        p.put("audit.kafka.topic", "audit_service_test");
+        return p;
+    }
+
+    private static ApplicationContextRunner runnerWith(Map<String, String> props) {
+        String[] values = props.entrySet().stream()
+                .map(e -> e.getKey() + "=" + e.getValue())
+                .toArray(String[]::new);
+        return new ApplicationContextRunner()
+                .withConfiguration(AutoConfigurations.of(
+                        KafkaAutoConfiguration.class, AuditAutoConfiguration.class))
+                .withPropertyValues(values);
+    }
+
+    private final ApplicationContextRunner runner = runnerWith(validProps());
 
     @Test
     void wiresUpAuditClientAndValidator() {
@@ -51,20 +71,18 @@ class AuditAutoConfigurationTest {
     }
 
     @Test
-    void failsFastWhenClientIdMissing() {
-        new ApplicationContextRunner()
-                .withConfiguration(AutoConfigurations.of(
-                        KafkaAutoConfiguration.class, AuditAutoConfiguration.class))
-                .withPropertyValues(
-                        "audit.source-service=payroll",
-                        "spring.kafka.bootstrap-servers=localhost:9092")   // no entra.client-id
-                .run(context -> {
-                    assertThat(context).hasFailed();
-                    assertThat(context.getStartupFailure())
-                            .hasRootCauseInstanceOf(IllegalStateException.class);
-                    assertThat(context.getStartupFailure().getMessage())
-                            .contains("entra.client-id");
-                });
+    void failsFastWhenAnyRequiredPropertyIsMissing() {
+        // Each required property, omitted in turn, must fail startup with a message naming it.
+        for (String property : validProps().keySet()) {
+            Map<String, String> props = validProps();
+            props.remove(property);
+            runnerWith(props).run(context -> {
+                assertThat(context).as("missing " + property).hasFailed();
+                assertThat(context.getStartupFailure())
+                        .hasRootCauseInstanceOf(IllegalStateException.class);
+                assertThat(context.getStartupFailure().getMessage()).contains(property);
+            });
+        }
     }
 
     @Test
@@ -123,7 +141,7 @@ class AuditAutoConfigurationTest {
     static class CustomClientConfig {
         @SuppressWarnings("unchecked")
         static final AuditClient CUSTOM = new AuditClient(
-                mock(KafkaTemplate.class), new AuditProperties(), mock(Validator.class));
+                "audit_service_test", mock(KafkaTemplate.class), new AuditProperties(), mock(Validator.class));
 
         @Bean
         AuditClient auditClient() {

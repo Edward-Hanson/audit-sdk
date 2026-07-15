@@ -3,6 +3,8 @@ package com.company.audit.config;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Properties teams set in their application.yml, e.g.:
@@ -10,10 +12,14 @@ import java.time.Duration;
  * audit:
  *   source-service: payroll
  *   fail-on-error: false
+ *   kafka:
+ *     servers: broker1:9092,broker2:9092   # dedicated audit broker (per environment)
+ *     topic: audit_service_dev             # dedicated audit topic (per environment)
  *
- * NOTE: the destination Kafka topic is intentionally NOT a property. It is owned by
- * the SDK ({@link com.company.audit.client.AuditClient#TOPIC}) so that every service
- * publishes to the same audit topic and no team can accidentally redirect events.
+ * The destination (broker + topic) is intentionally NOT baked into the SDK — it must be
+ * supplied per environment so dev/stage/prod can't cross-publish. When auditing is enabled
+ * both {@code audit.kafka.servers} and {@code audit.kafka.topic} are required or the app
+ * fails to start.
  */
 @ConfigurationProperties(prefix = "audit")
 public class AuditProperties {
@@ -27,6 +33,13 @@ public class AuditProperties {
 
     /** Name of the emitting application. Required. Stamped onto every event. */
     private String sourceService;
+
+    /**
+     * Base URL of the audit service. Required when enabled. The SDK registers this
+     * application once at startup via {@code POST {url}/register} (authenticated with an
+     * Entra token) before any events are published.
+     */
+    private String url;
 
     /**
      * If true, send() throws when the send to Kafka ultimately fails.
@@ -44,15 +57,53 @@ public class AuditProperties {
      */
     private Duration sendTimeout = Duration.ofSeconds(10);
 
+    /** Dedicated audit Kafka settings (broker + topic). Required when enabled. */
+    private final Kafka kafka = new Kafka();
+
     public boolean isEnabled() { return enabled; }
     public void setEnabled(boolean enabled) { this.enabled = enabled; }
 
     public String getSourceService() { return sourceService; }
     public void setSourceService(String sourceService) { this.sourceService = sourceService; }
 
+    public String getUrl() { return url; }
+    public void setUrl(String url) { this.url = url; }
+
     public boolean isFailOnError() { return failOnError; }
     public void setFailOnError(boolean failOnError) { this.failOnError = failOnError; }
 
     public Duration getSendTimeout() { return sendTimeout; }
     public void setSendTimeout(Duration sendTimeout) { this.sendTimeout = sendTimeout; }
+
+    public Kafka getKafka() { return kafka; }
+
+    /**
+     * Dedicated audit Kafka configuration — kept separate from the host app's
+     * {@code spring.kafka.*} so audit events go to their own cluster/topic per environment.
+     */
+    public static class Kafka {
+
+        /** Bootstrap servers for the audit cluster (comma-separated). Required when enabled. */
+        private String servers;
+
+        /** Topic to publish audit events to. Required when enabled. */
+        private String topic;
+
+        /**
+         * Optional extra producer properties passed straight through to the Kafka client —
+         * e.g. {@code security.protocol}, {@code sasl.mechanism}, {@code sasl.jaas.config} for
+         * a secured audit broker. SDK-owned settings (serializers, idempotence, acks, etc.)
+         * always take precedence.
+         */
+        private Map<String, String> properties = new HashMap<>();
+
+        public String getServers() { return servers; }
+        public void setServers(String servers) { this.servers = servers; }
+
+        public String getTopic() { return topic; }
+        public void setTopic(String topic) { this.topic = topic; }
+
+        public Map<String, String> getProperties() { return properties; }
+        public void setProperties(Map<String, String> properties) { this.properties = properties; }
+    }
 }

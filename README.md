@@ -61,7 +61,7 @@ for the latest commit.
 <dependency>
     <groupId>com.github.Edward-Hanson</groupId>
     <artifactId>audit-sdk</artifactId>
-    <version>v0.3.0</version>
+    <version>v0.4.0</version>
 </dependency>
 ```
 
@@ -79,7 +79,7 @@ repositories {
 }
 
 dependencies {
-    implementation("com.github.Edward-Hanson:audit-sdk:v0.3.0")
+    implementation("com.github.Edward-Hanson:audit-sdk:v0.4.0")
 }
 ```
 </details>
@@ -132,24 +132,54 @@ resolution; the SDK does not pin one for you. Supported: kafka-clients 3.x.
 ## Configure
 
 ```yaml
-spring:
-  kafka:
-    bootstrap-servers: localhost:9092
-
 entra:
-  client-id: <your-entra-client-id>   # required (when enabled) — Kafka producer client.id
+  client-id: <your-entra-client-id>       # required (when enabled)
+  client-secret: ${ENTRA_CLIENT_SECRET}   # required (when enabled) — from a secret store!
+  tenant-id: <your-entra-tenant-id>       # required (when enabled)
+  # scope: <client-id>/.default           # optional (default: <client-id>/.default)
+  # authority: https://login.microsoftonline.com   # optional (Azure public cloud default)
 
 audit:
   enabled: true               # optional (default: true) — false = no-op, no Kafka needed
   source-service: payroll     # required (when enabled) — identifies this app
+  url: https://audit.internal # required (when enabled) — audit service base URL (for registration)
   fail-on-error: false        # optional (default: false)
   send-timeout: 10s           # optional (default: 10s) — only used when fail-on-error=true
+  kafka:
+    servers: broker1:9092,broker2:9092    # required (when enabled) — dedicated audit broker
+    topic: audit_service_dev              # required (when enabled) — dedicated audit topic
+    # properties:                         # optional passthrough for a secured broker
+    #   security.protocol: SASL_SSL
+    #   sasl.mechanism: PLAIN
 ```
 
-`entra.client-id` is **required** when auditing is enabled — the SDK **fails fast at
-startup** with a clear error if it's missing. It's applied as the Kafka producer's
-`client.id` (used in broker logs, metrics, and quotas). Note it's under the `entra`
-prefix (your Microsoft Entra client id), not `audit`.
+**Required when enabled** (the SDK **fails fast at startup** if any is missing):
+`entra.client-id`, `entra.client-secret`, `entra.tenant-id`, `audit.url`,
+`audit.source-service`, `audit.kafka.servers`, `audit.kafka.topic`.
+
+- `entra.*` — Microsoft Entra client-credentials used to (1) obtain a token for the one-time
+  registration handshake and (2) set the Kafka producer's `client.id`. **`client-secret` must
+  come from a secret store / env var — never commit it.** `scope` defaults to
+  `<client-id>/.default`; `authority` defaults to the Azure public cloud.
+- `audit.url` — base URL of the audit service; the SDK calls `POST {audit.url}/register` once
+  at startup (see below).
+- `audit.kafka.servers` / `audit.kafka.topic` — the audit broker and topic are **not baked
+  into the SDK**; supplied per environment so dev/stage/prod point at their own cluster/topic
+  and can never cross-publish. Connects **independently of the app's own `spring.kafka.*`**.
+- `audit.kafka.properties` — optional passthrough for a secured broker (`security.protocol`, `sasl.*`).
+
+### Startup registration
+
+When enabled, the SDK registers this application with the audit service **once at startup,
+before any events are published**:
+
+1. It requests an OAuth2 token from Microsoft Entra using the client-credentials grant
+   (`entra.client-id` + `client-secret` + `tenant-id`).
+2. It calls `POST {audit.url}/register` with that token as a `Bearer` header (no body).
+
+If registration fails (token or `/register` call), the **application fails to start** —
+auditing is mandatory when enabled, so a service never runs un-registered. This does couple
+startup to Entra + the audit service being reachable; keep that in mind for your deploy order.
 
 Set `audit.enabled=false` to turn the SDK into a no-op: `AuditClient` is still
 injectable and `send(...)` calls are safe, but nothing is published and **no Kafka
@@ -193,9 +223,10 @@ event can't be sent.
   gives up — the consumer's `eventId` dedup handles that duplicate safely. Keep
   `send-timeout` below your request/transaction timeout.
 
-The destination topic is **not configurable** — it is fixed by the SDK
-(`audit_service`) so every service publishes to the same governed topic and no
-team can redirect events. There is no `audit.topic` property.
+The destination broker and topic come from `audit.kafka.servers` / `audit.kafka.topic`
+and are **not baked into the SDK** — set them per environment (dev/stage/prod) so events
+can't cross-publish between environments. Treat these as **platform/DevOps-owned config**
+(injected per environment), not values individual app teams pick ad hoc.
 
 ## Use
 

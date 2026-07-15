@@ -39,6 +39,8 @@ class AuditClientTest {
     private static final Validator VALIDATOR =
             Validation.buildDefaultValidatorFactory().getValidator();
 
+    private static final String TOPIC = "audit_service_test";
+
     @SuppressWarnings("unchecked")
     private final KafkaTemplate<String, AuditEvent> kafkaTemplate = mock(KafkaTemplate.class);
 
@@ -49,7 +51,7 @@ class AuditClientTest {
     void setUp() {
         properties = new AuditProperties();
         properties.setSourceService("payroll");
-        client = new AuditClient(kafkaTemplate, properties, VALIDATOR);
+        client = new AuditClient(TOPIC, kafkaTemplate, properties, VALIDATOR);
     }
 
     private AuditEvent validEvent() {
@@ -69,16 +71,15 @@ class AuditClientTest {
     }
 
     @Test
-    void sendsValidEventToTheFixedTopicWithNoKey() {
+    void sendsValidEventToTheConfiguredTopicWithNoKey() {
         templateSucceeds();
 
         AuditEvent event = validEvent();
         client.send(event);
 
-        // Topic is the SDK-owned constant; no key is passed, so Kafka's sticky
+        // Publishes to the configured topic; no key is passed, so Kafka's sticky
         // partitioner spreads events evenly (ordering is not required).
-        assertThat(AuditClient.TOPIC).isEqualTo("audit_service");
-        verify(kafkaTemplate).send(eq(AuditClient.TOPIC), eq(event));
+        verify(kafkaTemplate).send(eq(TOPIC), eq(event));
     }
 
     @Test
@@ -188,7 +189,7 @@ class AuditClientTest {
         templateSucceeds();
 
         assertThatCode(() -> client.send(validEvent())).doesNotThrowAnyException();
-        verify(kafkaTemplate).send(eq(AuditClient.TOPIC), any(AuditEvent.class));
+        verify(kafkaTemplate).send(eq(TOPIC), any(AuditEvent.class));
     }
 
     @Test
@@ -207,7 +208,7 @@ class AuditClientTest {
             }
 
             // Now — and only now — the event is published.
-            verify(kafkaTemplate).send(eq(AuditClient.TOPIC), any(AuditEvent.class));
+            verify(kafkaTemplate).send(eq(TOPIC), any(AuditEvent.class));
         } finally {
             TransactionSynchronizationManager.clearSynchronization();
         }
