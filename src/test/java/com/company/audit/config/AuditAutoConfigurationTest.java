@@ -36,6 +36,7 @@ class AuditAutoConfigurationTest {
                     KafkaAutoConfiguration.class, AuditAutoConfiguration.class))
             .withPropertyValues(
                     "audit.source-service=payroll",
+                    "entra.client-id=payroll-client-id",
                     "spring.kafka.bootstrap-servers=localhost:9092");
 
     @Test
@@ -47,6 +48,23 @@ class AuditAutoConfigurationTest {
             assertThat(context.getBean(AuditProperties.class).getSourceService())
                     .isEqualTo("payroll");
         });
+    }
+
+    @Test
+    void failsFastWhenClientIdMissing() {
+        new ApplicationContextRunner()
+                .withConfiguration(AutoConfigurations.of(
+                        KafkaAutoConfiguration.class, AuditAutoConfiguration.class))
+                .withPropertyValues(
+                        "audit.source-service=payroll",
+                        "spring.kafka.bootstrap-servers=localhost:9092")   // no entra.client-id
+                .run(context -> {
+                    assertThat(context).hasFailed();
+                    assertThat(context.getStartupFailure())
+                            .hasRootCauseInstanceOf(IllegalStateException.class);
+                    assertThat(context.getStartupFailure().getMessage())
+                            .contains("entra.client-id");
+                });
     }
 
     @Test

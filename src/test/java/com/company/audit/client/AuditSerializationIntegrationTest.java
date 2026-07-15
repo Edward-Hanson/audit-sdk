@@ -42,6 +42,7 @@ class AuditSerializationIntegrationTest {
                         KafkaAutoConfiguration.class, AuditAutoConfiguration.class))
                 .withPropertyValues(
                         "audit.source-service=payroll",
+                        "entra.client-id=payroll-client-id",
                         // Block until the broker acks so the record is on the topic
                         // before we consume — makes the assertion deterministic.
                         "audit.fail-on-error=true",

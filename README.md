@@ -61,7 +61,7 @@ for the latest commit.
 <dependency>
     <groupId>com.github.Edward-Hanson</groupId>
     <artifactId>audit-sdk</artifactId>
-    <version>v0.2.0</version>
+    <version>v0.3.0</version>
 </dependency>
 ```
 
@@ -79,7 +79,7 @@ repositories {
 }
 
 dependencies {
-    implementation("com.github.Edward-Hanson:audit-sdk:v0.2.0")
+    implementation("com.github.Edward-Hanson:audit-sdk:v0.3.0")
 }
 ```
 </details>
@@ -136,12 +136,20 @@ spring:
   kafka:
     bootstrap-servers: localhost:9092
 
+entra:
+  client-id: <your-entra-client-id>   # required (when enabled) — Kafka producer client.id
+
 audit:
   enabled: true               # optional (default: true) — false = no-op, no Kafka needed
   source-service: payroll     # required (when enabled) — identifies this app
   fail-on-error: false        # optional (default: false)
   send-timeout: 10s           # optional (default: 10s) — only used when fail-on-error=true
 ```
+
+`entra.client-id` is **required** when auditing is enabled — the SDK **fails fast at
+startup** with a clear error if it's missing. It's applied as the Kafka producer's
+`client.id` (used in broker logs, metrics, and quotas). Note it's under the `entra`
+prefix (your Microsoft Entra client id), not `audit`.
 
 Set `audit.enabled=false` to turn the SDK into a no-op: `AuditClient` is still
 injectable and `send(...)` calls are safe, but nothing is published and **no Kafka

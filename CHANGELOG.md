@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 _Nothing yet._
 
+## [0.3.0] - 2026-07-15
+
+### Added
+
+- **Required `entra.client-id` property.** Read from `application.yml`/`.properties`
+  and applied as the Kafka producer's `client.id`. The SDK **fails fast at startup**
+  with a clear error if it's missing (when auditing is enabled). Not required when
+  `audit.enabled=false`.
+
+### Migration
+
+- Add `entra.client-id: <your-entra-client-id>` to every service using the SDK, or it
+  will fail to start once upgraded.
+
 ## [0.2.0] - 2026-07-14
 
 Breaking schema changes — upgrade requires code changes at call sites and a matching
@@ -104,7 +118,8 @@ no schema registry.
 </dependency>
 ```
 
-[Unreleased]: https://github.com/Edward-Hanson/audit-sdk/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/Edward-Hanson/audit-sdk/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/Edward-Hanson/audit-sdk/releases/tag/v0.3.0
 [0.2.0]: https://github.com/Edward-Hanson/audit-sdk/releases/tag/v0.2.0
 [0.1.1]: https://github.com/Edward-Hanson/audit-sdk/releases/tag/v0.1.1
 [0.1.0]: https://github.com/Edward-Hanson/audit-sdk/releases/tag/v0.1.0

@@ -12,6 +12,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -21,6 +22,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.serializer.JsonSerializer;
+import org.springframework.util.StringUtils;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -59,11 +61,19 @@ public class AuditAutoConfiguration {
     @ConditionalOnProperty(prefix = "audit", name = "enabled", havingValue = "true", matchIfMissing = true)
     public AuditClient auditClient(KafkaProperties kafkaProperties,
                                    AuditProperties auditProperties,
-                                   Validator auditValidator) {
+                                   Validator auditValidator,
+                                   @Value("${entra.client-id:}") String entraClientId) {
+        // Fail fast: entra.client-id is required. Without it the app must not start.
+        if (!StringUtils.hasText(entraClientId)) {
+            throw new IllegalStateException(
+                    "'entra.client-id' is required but is not set. Add it to your "
+                            + "application.yml/application.properties, e.g. 'entra.client-id: <your-entra-client-id>'.");
+        }
+
         // Built as plain objects, NOT Spring beans, so we don't trip
         // KafkaAutoConfiguration's @ConditionalOnMissingBean(ProducerFactory/KafkaTemplate).
         DefaultKafkaProducerFactory<String, AuditEvent> producerFactory =
-                auditProducerFactory(kafkaProperties);
+                auditProducerFactory(kafkaProperties, entraClientId);
         KafkaTemplate<String, AuditEvent> kafkaTemplate = new KafkaTemplate<>(producerFactory);
 
         // AuditClient owns the producer factory's lifecycle: as a Spring bean it will
@@ -92,8 +102,10 @@ public class AuditAutoConfiguration {
      *
      * Not a {@code @Bean} — see the class-level note on bean isolation.
      */
-    private DefaultKafkaProducerFactory<String, AuditEvent> auditProducerFactory(KafkaProperties kafkaProperties) {
+    private DefaultKafkaProducerFactory<String, AuditEvent> auditProducerFactory(KafkaProperties kafkaProperties,
+                                                                                 String clientId) {
         Map<String, Object> props = new HashMap<>(invokeBuildProducerProperties(kafkaProperties));
+        props.put(ProducerConfig.CLIENT_ID_CONFIG, clientId);
         props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         props.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, true);
         props.put(ProducerConfig.ACKS_CONFIG, "all");
