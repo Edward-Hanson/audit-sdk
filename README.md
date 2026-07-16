@@ -61,7 +61,7 @@ for the latest commit.
 <dependency>
     <groupId>com.github.Edward-Hanson</groupId>
     <artifactId>audit-sdk</artifactId>
-    <version>v0.4.0</version>
+    <version>v0.5.0</version>
 </dependency>
 ```
 
@@ -79,7 +79,7 @@ repositories {
 }
 
 dependencies {
-    implementation("com.github.Edward-Hanson:audit-sdk:v0.4.0")
+    implementation("com.github.Edward-Hanson:audit-sdk:v0.5.0")
 }
 ```
 </details>
@@ -141,7 +141,7 @@ entra:
 
 audit:
   enabled: true               # optional (default: true) — false = no-op, no Kafka needed
-  source-service: payroll     # required (when enabled) — identifies this app
+  display-name: Payroll       # required (when enabled) — application display name (shown in the audit UI)
   url: https://audit.internal # required (when enabled) — audit service base URL (for registration)
   fail-on-error: false        # optional (default: false)
   send-timeout: 10s           # optional (default: 10s) — only used when fail-on-error=true
@@ -155,7 +155,7 @@ audit:
 
 **Required when enabled** (the SDK **fails fast at startup** if any is missing):
 `entra.client-id`, `entra.client-secret`, `entra.tenant-id`, `audit.url`,
-`audit.source-service`, `audit.kafka.servers`, `audit.kafka.topic`.
+`audit.display-name`, `audit.kafka.servers`, `audit.kafka.topic`.
 
 - `entra.*` — Microsoft Entra client-credentials used to (1) obtain a token for the one-time
   registration handshake and (2) set the Kafka producer's `client.id`. **`client-secret` must

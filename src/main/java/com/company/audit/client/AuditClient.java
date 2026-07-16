@@ -45,6 +45,9 @@ public class AuditClient implements DisposableBean {
     /** The audit topic to publish to — supplied from {@code audit.kafka.topic} config. */
     private final String topic;
 
+    /** Verified Entra client id (from {@code entra.client-id}). Stamped onto every event. */
+    private final String clientId;
+
     private final boolean enabled;
     private final KafkaTemplate<String, AuditEvent> kafkaTemplate;
     private final AuditProperties properties;
@@ -63,12 +66,14 @@ public class AuditClient implements DisposableBean {
      * {@code producerFactory} on shutdown.
      */
     public AuditClient(String topic,
+                       String clientId,
                        KafkaTemplate<String, AuditEvent> kafkaTemplate,
                        DefaultKafkaProducerFactory<String, AuditEvent> producerFactory,
                        AuditProperties properties,
                        Validator validator) {
         this.enabled = true;
         this.topic = topic;
+        this.clientId = clientId;
         this.kafkaTemplate = kafkaTemplate;
         this.ownedProducerFactory = producerFactory;
         this.properties = properties;
@@ -81,16 +86,18 @@ public class AuditClient implements DisposableBean {
      * factory is closed on shutdown.
      */
     public AuditClient(String topic,
+                       String clientId,
                        KafkaTemplate<String, AuditEvent> kafkaTemplate,
                        AuditProperties properties,
                        Validator validator) {
-        this(topic, kafkaTemplate, null, properties, validator);
+        this(topic, clientId, kafkaTemplate, null, properties, validator);
     }
 
     /** No-op constructor used when {@code audit.enabled=false}. Touches no Kafka. */
     private AuditClient() {
         this.enabled = false;
         this.topic = null;
+        this.clientId = null;
         this.kafkaTemplate = null;
         this.ownedProducerFactory = null;
         this.properties = null;
@@ -207,7 +214,9 @@ public class AuditClient implements DisposableBean {
     }
 
     private void stampDefaults(AuditEvent event) {
-        event.setSourceService(properties.getSourceService());
+        // sourceService (display name) and clientId always come from config, never the caller.
+        event.setSourceService(properties.getDisplayName());
+        event.setClientId(clientId);
         if (!StringUtils.hasText(event.getEventId())) {
             event.setEventId(java.util.UUID.randomUUID().toString());
         }

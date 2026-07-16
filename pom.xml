@@ -7,7 +7,7 @@
     <!-- JitPack convention: groupId com.github.<user>, artifactId == repository name. -->
     <groupId>com.github.Edward-Hanson</groupId>
     <artifactId>audit-sdk</artifactId>
-    <version>0.4.0</version>
+    <version>0.5.0</version>
     <packaging>jar</packaging>
 
     <name>Audit SDK — Spring Boot Starter</name>

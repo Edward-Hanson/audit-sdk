@@ -68,7 +68,7 @@ public class AuditAutoConfiguration {
         String servers = auditProperties.getKafka().getServers();
         String topic = auditProperties.getKafka().getTopic();
         String entraClientId = entraProperties.getClientId();
-        require(auditProperties.getSourceService(), "audit.source-service", "payroll");
+        require(auditProperties.getDisplayName(), "audit.display-name", "Payroll");
         require(entraClientId, "entra.client-id", "<your-entra-client-id>");
         require(servers, "audit.kafka.servers", "broker1:9092,broker2:9092");
         require(topic, "audit.kafka.topic", "audit_service_dev");
@@ -81,7 +81,7 @@ public class AuditAutoConfiguration {
 
         // AuditClient owns the producer factory's lifecycle: as a Spring bean it will
         // have destroy() invoked on context shutdown, which closes the producer cleanly.
-        return new AuditClient(topic, kafkaTemplate, producerFactory, auditProperties, auditValidator);
+        return new AuditClient(topic, entraClientId, kafkaTemplate, producerFactory, auditProperties, auditValidator);
     }
 
     /**
@@ -115,7 +115,7 @@ public class AuditAutoConfiguration {
         HttpClient http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
         EntraTokenClient tokenClient = new EntraTokenClient(http, new ObjectMapper(), entraProperties);
         return new AuditServiceRegistrar(
-                http, tokenClient, auditProperties.getUrl(), auditProperties.getSourceService());
+                http, tokenClient, auditProperties.getUrl(), auditProperties.getDisplayName());
     }
 
     private static void require(String value, String property, String example) {

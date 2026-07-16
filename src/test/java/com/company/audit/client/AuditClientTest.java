@@ -40,6 +40,7 @@ class AuditClientTest {
             Validation.buildDefaultValidatorFactory().getValidator();
 
     private static final String TOPIC = "audit_service_test";
+    private static final String CLIENT_ID = "client-abc";
 
     @SuppressWarnings("unchecked")
     private final KafkaTemplate<String, AuditEvent> kafkaTemplate = mock(KafkaTemplate.class);
@@ -50,8 +51,8 @@ class AuditClientTest {
     @BeforeEach
     void setUp() {
         properties = new AuditProperties();
-        properties.setSourceService("payroll");
-        client = new AuditClient(TOPIC, kafkaTemplate, properties, VALIDATOR);
+        properties.setDisplayName("Payroll");
+        client = new AuditClient(TOPIC, CLIENT_ID, kafkaTemplate, properties, VALIDATOR);
     }
 
     private AuditEvent validEvent() {
@@ -89,20 +90,23 @@ class AuditClientTest {
         AuditEvent event = validEvent();
         client.send(event);
 
-        assertThat(event.getSourceService()).isEqualTo("payroll"); // from config, not caller
+        assertThat(event.getSourceService()).isEqualTo("Payroll"); // display-name from config, not caller
+        assertThat(event.getClientId()).isEqualTo(CLIENT_ID);      // entra.client-id from config
         assertThat(event.getEventId()).isNotBlank();
         assertThat(event.getTimestamp()).isNotNull();
     }
 
     @Test
-    void sourceServiceAlwaysComesFromConfig() {
+    void sourceServiceAndClientIdAlwaysComeFromConfig() {
         templateSucceeds();
 
         AuditEvent event = validEvent();
-        event.setSourceService("spoofed"); // caller attempt is overwritten
+        event.setSourceService("spoofed"); // caller attempts are overwritten
+        event.setClientId("spoofed-client");
         client.send(event);
 
-        assertThat(event.getSourceService()).isEqualTo("payroll");
+        assertThat(event.getSourceService()).isEqualTo("Payroll");
+        assertThat(event.getClientId()).isEqualTo(CLIENT_ID);
     }
 
     @Test

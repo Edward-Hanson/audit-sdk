@@ -26,6 +26,7 @@ public final class AuditEventBuilder {
     public AuditEventBuilder newPayload(Map<String, Object> v) { event.setNewPayload(v); return this; }
     public AuditEventBuilder payloadDifference(Map<String, Object> v) { event.setPayloadDifference(v); return this; }
     public AuditEventBuilder oldPayload(Map<String, Object> v) { event.setOldPayload(v); return this; }
+    public AuditEventBuilder metadata(Map<String, Object> v) { event.setMetadata(v); return this; }
     public AuditEventBuilder timestamp(Instant v) { event.setTimestamp(v); return this; }
 
     public AuditEvent build() {

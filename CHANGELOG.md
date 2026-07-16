@@ -9,6 +9,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 _Nothing yet._
 
+## [0.5.0] - 2026-07-16
+
+Breaking — a config rename and two new event fields.
+
+### Changed
+
+- **Renamed `audit.source-service` → `audit.display-name`** (compulsory). It's the
+  human-friendly application name, stamped as the event's `sourceService`, sent as the
+  app name at registration, and shown in the audit UI. Users may change it over time.
+
+### Added
+
+- **`clientId` on `AuditEvent`** — stamped from the compulsory `entra.client-id` (the
+  verified identity). The audit service uses it to attribute and gate events.
+- **`metadata` on `AuditEvent`** — a free-form `Map` for services to attach extra fields
+  (`.metadata(Map.of(...))` on the builder).
+
+### Migration
+
+- Rename `audit.source-service` → `audit.display-name` in every service's config.
+
 ## [0.4.0] - 2026-07-15
 
 Breaking configuration change — the audit destination is no longer baked into the SDK.
@@ -163,7 +184,8 @@ no schema registry.
 </dependency>
 ```
 
-[Unreleased]: https://github.com/Edward-Hanson/audit-sdk/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/Edward-Hanson/audit-sdk/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/Edward-Hanson/audit-sdk/releases/tag/v0.5.0
 [0.4.0]: https://github.com/Edward-Hanson/audit-sdk/releases/tag/v0.4.0
 [0.3.0]: https://github.com/Edward-Hanson/audit-sdk/releases/tag/v0.3.0
 [0.2.0]: https://github.com/Edward-Hanson/audit-sdk/releases/tag/v0.2.0

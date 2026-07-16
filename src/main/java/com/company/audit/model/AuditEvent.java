@@ -23,9 +23,13 @@ public class AuditEvent {
     @NotBlank
     private String eventId = UUID.randomUUID().toString();
 
-    /** Which application emitted this event (payroll, loans, employee, ...). */
+    /** Emitting application's display name (from {@code audit.display-name}). SDK-stamped. */
     @NotBlank
     private String sourceService;
+
+    /** Verified Entra client id (from {@code entra.client-id}). SDK-stamped; used to attribute the event. */
+    @NotBlank
+    private String clientId;
 
     @NotBlank
     private String userName;
@@ -59,6 +63,9 @@ public class AuditEvent {
     /** State BEFORE the change. Optional. */
     private Map<String, Object> oldPayload;
 
+    /** Free-form extra fields the emitting service wants to attach. Optional. */
+    private Map<String, Object> metadata;
+
     /** Event time (UTC instant). Defaults to now if not set. */
     @NotNull
     private Instant timestamp = Instant.now();
@@ -73,6 +80,9 @@ public class AuditEvent {
 
     public String getSourceService() { return sourceService; }
     public void setSourceService(String sourceService) { this.sourceService = sourceService; }
+
+    public String getClientId() { return clientId; }
+    public void setClientId(String clientId) { this.clientId = clientId; }
 
     public String getUserName() { return userName; }
     public void setUserName(String userName) { this.userName = userName; }
@@ -106,6 +116,9 @@ public class AuditEvent {
 
     public Map<String, Object> getOldPayload() { return oldPayload; }
     public void setOldPayload(Map<String, Object> oldPayload) { this.oldPayload = oldPayload; }
+
+    public Map<String, Object> getMetadata() { return metadata; }
+    public void setMetadata(Map<String, Object> metadata) { this.metadata = metadata; }
 
     public Instant getTimestamp() { return timestamp; }
     public void setTimestamp(Instant timestamp) { this.timestamp = timestamp; }

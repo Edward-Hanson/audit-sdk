@@ -43,7 +43,7 @@ class AuditSerializationIntegrationTest {
                 .withConfiguration(AutoConfigurations.of(
                         KafkaAutoConfiguration.class, AuditAutoConfiguration.class))
                 .withPropertyValues(
-                        "audit.source-service=payroll",
+                        "audit.display-name=Payroll",
                         "entra.client-id=payroll-client-id",
                         // Registration config (validated at refresh; the ApplicationRunner
                         // that makes the real HTTP call is not triggered by the context runner).
@@ -86,7 +86,8 @@ class AuditSerializationIntegrationTest {
 
                     String json = record.value();
                     assertThat(json)
-                            .contains("\"sourceService\":\"payroll\"")
+                            .contains("\"sourceService\":\"Payroll\"")
+                            .contains("\"clientId\":\"payroll-client-id\"")
                             .contains("\"userName\":\"jane.admin\"")
                             .contains("\"userId\":42")
                             // Enum serialized by name.

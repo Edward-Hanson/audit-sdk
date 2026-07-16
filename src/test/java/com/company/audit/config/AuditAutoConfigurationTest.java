@@ -37,7 +37,7 @@ class AuditAutoConfigurationTest {
     /** A complete, valid set of required properties (keyed by property name). */
     private static Map<String, String> validProps() {
         Map<String, String> p = new LinkedHashMap<>();
-        p.put("audit.source-service", "payroll");
+        p.put("audit.display-name", "Payroll");
         p.put("entra.client-id", "payroll-client-id");
         p.put("entra.client-secret", "shhh");
         p.put("entra.tenant-id", "tenant-123");
@@ -65,8 +65,8 @@ class AuditAutoConfigurationTest {
             assertThat(context).hasSingleBean(AuditClient.class);
             assertThat(context).hasSingleBean(Validator.class);
             assertThat(context).hasSingleBean(AuditProperties.class);
-            assertThat(context.getBean(AuditProperties.class).getSourceService())
-                    .isEqualTo("payroll");
+            assertThat(context.getBean(AuditProperties.class).getDisplayName())
+                    .isEqualTo("Payroll");
         });
     }
 
@@ -141,7 +141,7 @@ class AuditAutoConfigurationTest {
     static class CustomClientConfig {
         @SuppressWarnings("unchecked")
         static final AuditClient CUSTOM = new AuditClient(
-                "audit_service_test", mock(KafkaTemplate.class), new AuditProperties(), mock(Validator.class));
+                "audit_service_test", "client-x", mock(KafkaTemplate.class), new AuditProperties(), mock(Validator.class));
 
         @Bean
         AuditClient auditClient() {

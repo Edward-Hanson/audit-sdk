@@ -10,7 +10,7 @@ import java.util.Map;
  * Properties teams set in their application.yml, e.g.:
  *
  * audit:
- *   source-service: payroll
+ *   display-name: Payroll
  *   fail-on-error: false
  *   kafka:
  *     servers: broker1:9092,broker2:9092   # dedicated audit broker (per environment)
@@ -31,8 +31,12 @@ public class AuditProperties {
      */
     private boolean enabled = true;
 
-    /** Name of the emitting application. Required. Stamped onto every event. */
-    private String sourceService;
+    /**
+     * Human-friendly application name. Required when enabled. Stamped onto every event as
+     * its {@code sourceService}, sent as the app name at registration, and shown in the
+     * audit UI. Users may change it over time.
+     */
+    private String displayName;
 
     /**
      * Base URL of the audit service. Required when enabled. The SDK registers this
@@ -63,8 +67,8 @@ public class AuditProperties {
     public boolean isEnabled() { return enabled; }
     public void setEnabled(boolean enabled) { this.enabled = enabled; }
 
-    public String getSourceService() { return sourceService; }
-    public void setSourceService(String sourceService) { this.sourceService = sourceService; }
+    public String getDisplayName() { return displayName; }
+    public void setDisplayName(String displayName) { this.displayName = displayName; }
 
     public String getUrl() { return url; }
     public void setUrl(String url) { this.url = url; }
