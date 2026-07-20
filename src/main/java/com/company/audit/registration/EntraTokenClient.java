@@ -23,18 +23,17 @@ public class EntraTokenClient {
     private final HttpClient http;
     private final ObjectMapper mapper;
     private final EntraProperties entra;
+    private final String scope;
 
-    public EntraTokenClient(HttpClient http, ObjectMapper mapper, EntraProperties entra) {
+    public EntraTokenClient(HttpClient http, ObjectMapper mapper, EntraProperties entra, String scope) {
         this.http = http;
         this.mapper = mapper;
         this.entra = entra;
+        this.scope = scope;
     }
 
     /** @return a bearer access token; throws {@link AuditRegistrationException} on failure. */
     public String fetchAccessToken() {
-        String scope = StringUtils.hasText(entra.getScope())
-                ? entra.getScope()
-                : entra.getClientId() + "/.default";
         String tokenUrl = trimTrailingSlash(entra.getAuthority())
                 + "/" + entra.getTenantId() + "/oauth2/v2.0/token";
 

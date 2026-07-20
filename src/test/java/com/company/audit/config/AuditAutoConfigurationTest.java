@@ -42,6 +42,7 @@ class AuditAutoConfigurationTest {
         p.put("entra.client-secret", "shhh");
         p.put("entra.tenant-id", "tenant-123");
         p.put("audit.url", "https://audit.internal");
+        p.put("audit.scope", "api://audit/.default");
         p.put("audit.kafka.servers", "localhost:9092");
         p.put("audit.kafka.topic", "audit_service_test");
         return p;

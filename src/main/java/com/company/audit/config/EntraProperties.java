@@ -25,12 +25,6 @@ public class EntraProperties {
     private String tenantId;
 
     /**
-     * OAuth2 scope for the client-credentials token. Optional — defaults to
-     * {@code <client-id>/.default} when not set.
-     */
-    private String scope;
-
-    /**
      * Entra authority base URL. Optional — defaults to the Azure public cloud. Override
      * for sovereign clouds (or a stub in tests).
      */
@@ -44,9 +38,6 @@ public class EntraProperties {
 
     public String getTenantId() { return tenantId; }
     public void setTenantId(String tenantId) { this.tenantId = tenantId; }
-
-    public String getScope() { return scope; }
-    public void setScope(String scope) { this.scope = scope; }
 
     public String getAuthority() { return authority; }
     public void setAuthority(String authority) { this.authority = authority; }

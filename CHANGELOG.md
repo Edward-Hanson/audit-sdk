@@ -9,6 +9,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 _Nothing yet._
 
+## [0.6.0] - 2026-07-20
+
+Breaking — a new required property, and permission enforcement on the audit service.
+
+### Added
+
+- **Required `audit.scope`** — the OAuth2 scope the SDK requests from Entra for the
+  audit-service API (typically `api://<audit-app-id>/.default`). It sets the token's
+  audience and the app-role permissions it carries. The SDK fails fast at startup if
+  it's missing (when enabled).
+
+### Changed
+
+- The Entra token is now requested with `audit.scope` (was an optional `entra.scope`
+  defaulting to `<client-id>/.default`). **Removed `entra.scope`.**
+- The audit service now enforces app-role permissions from the token's `roles` claim:
+  **`audit.register`** to call `POST /register`, **`audit.read`** to query `/graphql`.
+  Grant these app roles to each client app in Entra.
+
+### Migration
+
+- Add `audit.scope` to every service's config, and grant the client app the
+  `audit.register` (and `audit.read`, if it queries) app roles on the audit-service
+  app registration in Entra.
+
 ## [0.5.0] - 2026-07-16
 
 Breaking — a config rename and two new event fields.
@@ -184,7 +209,8 @@ no schema registry.
 </dependency>
 ```
 
-[Unreleased]: https://github.com/Edward-Hanson/audit-sdk/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/Edward-Hanson/audit-sdk/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/Edward-Hanson/audit-sdk/releases/tag/v0.6.0
 [0.5.0]: https://github.com/Edward-Hanson/audit-sdk/releases/tag/v0.5.0
 [0.4.0]: https://github.com/Edward-Hanson/audit-sdk/releases/tag/v0.4.0
 [0.3.0]: https://github.com/Edward-Hanson/audit-sdk/releases/tag/v0.3.0

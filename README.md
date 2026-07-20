@@ -61,7 +61,7 @@ for the latest commit.
 <dependency>
     <groupId>com.github.Edward-Hanson</groupId>
     <artifactId>audit-sdk</artifactId>
-    <version>v0.5.0</version>
+    <version>v0.6.0</version>
 </dependency>
 ```
 
@@ -79,7 +79,7 @@ repositories {
 }
 
 dependencies {
-    implementation("com.github.Edward-Hanson:audit-sdk:v0.5.0")
+    implementation("com.github.Edward-Hanson:audit-sdk:v0.6.0")
 }
 ```
 </details>
@@ -136,13 +136,13 @@ entra:
   client-id: <your-entra-client-id>       # required (when enabled)
   client-secret: ${ENTRA_CLIENT_SECRET}   # required (when enabled) — from a secret store!
   tenant-id: <your-entra-tenant-id>       # required (when enabled)
-  # scope: <client-id>/.default           # optional (default: <client-id>/.default)
   # authority: https://login.microsoftonline.com   # optional (Azure public cloud default)
 
 audit:
   enabled: true               # optional (default: true) — false = no-op, no Kafka needed
   display-name: Payroll       # required (when enabled) — application display name (shown in the audit UI)
   url: https://audit.internal # required (when enabled) — audit service base URL (for registration)
+  scope: api://<audit-app-id>/.default   # required (when enabled) — Entra scope for the audit API
   fail-on-error: false        # optional (default: false)
   send-timeout: 10s           # optional (default: 10s) — only used when fail-on-error=true
   kafka:
@@ -154,13 +154,18 @@ audit:
 ```
 
 **Required when enabled** (the SDK **fails fast at startup** if any is missing):
-`entra.client-id`, `entra.client-secret`, `entra.tenant-id`, `audit.url`,
+`entra.client-id`, `entra.client-secret`, `entra.tenant-id`, `audit.url`, `audit.scope`,
 `audit.display-name`, `audit.kafka.servers`, `audit.kafka.topic`.
 
 - `entra.*` — Microsoft Entra client-credentials used to (1) obtain a token for the one-time
   registration handshake and (2) set the Kafka producer's `client.id`. **`client-secret` must
-  come from a secret store / env var — never commit it.** `scope` defaults to
-  `<client-id>/.default`; `authority` defaults to the Azure public cloud.
+  come from a secret store / env var — never commit it.** `authority` defaults to the Azure
+  public cloud.
+- `audit.scope` — the OAuth2 scope requested from Entra for the audit-service API (e.g.
+  `api://<audit-app-id>/.default`). It sets the token's audience and the **app-role permissions**
+  it carries. Grant the client app these roles on the audit-service app registration:
+  **`audit.register`** (required to register at startup) and **`audit.read`** (required to query
+  the audit log). The audit service enforces them per endpoint.
 - `audit.url` — base URL of the audit service; the SDK calls `POST {audit.url}/register` once
   at startup (see below).
 - `audit.kafka.servers` / `audit.kafka.topic` — the audit broker and topic are **not baked

@@ -50,6 +50,7 @@ class AuditSerializationIntegrationTest {
                         "entra.client-secret=shhh",
                         "entra.tenant-id=tenant-123",
                         "audit.url=https://audit.internal",
+                        "audit.scope=api://audit/.default",
                         // Dedicated audit broker + topic (embedded broker for the test).
                         "audit.kafka.servers=" + bootstrap,
                         "audit.kafka.topic=" + TOPIC,

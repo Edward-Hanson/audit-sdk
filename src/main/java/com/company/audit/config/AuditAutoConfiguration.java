@@ -111,9 +111,11 @@ public class AuditAutoConfiguration {
         require(entraProperties.getClientSecret(), "entra.client-secret", "<your-entra-client-secret>");
         require(entraProperties.getTenantId(), "entra.tenant-id", "<your-entra-tenant-id>");
         require(auditProperties.getUrl(), "audit.url", "https://audit.internal");
+        require(auditProperties.getScope(), "audit.scope", "api://<audit-app-id>/.default");
 
         HttpClient http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
-        EntraTokenClient tokenClient = new EntraTokenClient(http, new ObjectMapper(), entraProperties);
+        EntraTokenClient tokenClient =
+                new EntraTokenClient(http, new ObjectMapper(), entraProperties, auditProperties.getScope());
         return new AuditServiceRegistrar(
                 http, tokenClient, auditProperties.getUrl(), auditProperties.getDisplayName());
     }

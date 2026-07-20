@@ -70,7 +70,7 @@ class AuditServiceRegistrarTest {
         entra.setAuthority(baseUrl);   // point Entra token calls at the stub
 
         HttpClient http = HttpClient.newHttpClient();
-        EntraTokenClient tokenClient = new EntraTokenClient(http, new ObjectMapper(), entra);
+        EntraTokenClient tokenClient = new EntraTokenClient(http, new ObjectMapper(), entra, "api://audit/.default");
         return new AuditServiceRegistrar(http, tokenClient, baseUrl, "payroll");
     }
 

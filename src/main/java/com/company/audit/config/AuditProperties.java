@@ -46,6 +46,13 @@ public class AuditProperties {
     private String url;
 
     /**
+     * OAuth2 scope requested from Entra for the audit-service API. Required when enabled.
+     * Determines the token's audience and the app-role permissions it carries (e.g.
+     * {@code audit.register}, {@code audit.read}) — typically {@code api://<audit-app-id>/.default}.
+     */
+    private String scope;
+
+    /**
      * If true, send() throws when the send to Kafka ultimately fails.
      * If false (default), failures are logged but do not disrupt the caller's
      * business action. Recommended: false — a failed audit log should not
@@ -72,6 +79,9 @@ public class AuditProperties {
 
     public String getUrl() { return url; }
     public void setUrl(String url) { this.url = url; }
+
+    public String getScope() { return scope; }
+    public void setScope(String scope) { this.scope = scope; }
 
     public boolean isFailOnError() { return failOnError; }
     public void setFailOnError(boolean failOnError) { this.failOnError = failOnError; }
