@@ -4,14 +4,17 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <!-- JitPack convention: groupId com.github.<user>, artifactId == repository name. -->
-    <groupId>com.github.Edward-Hanson</groupId>
-    <artifactId>audit-sdk</artifactId>
-    <version>0.6.0</version>
-    <packaging>jar</packaging>
+    <!-- JitPack multi-module convention: consumers resolve each module as
+         com.github.<user>.<repo>:<module>:<version>, so the groupId here must be
+         com.github.Edward-Hanson.audit-sdk for inter-module (and consumer) resolution to work. -->
+    <groupId>com.github.Edward-Hanson.audit-sdk</groupId>
+    <artifactId>audit-sdk-parent</artifactId>
+    <version>0.7.0</version>
+    <packaging>pom</packaging>
 
-    <name>Audit SDK — Spring Boot Starter</name>
-    <description>Spring Boot starter for publishing validated audit events to Kafka.</description>
+    <name>Audit SDK (parent)</name>
+    <description>Publishes validated audit events to Kafka. One framework-neutral core plus a thin
+        Spring Boot starter per Boot generation (3.x and 4.x).</description>
     <url>https://github.com/Edward-Hanson/audit-sdk</url>
 
     <licenses>
@@ -28,137 +31,78 @@
         <developerConnection>scm:git:https://github.com/Edward-Hanson/audit-sdk.git</developerConnection>
     </scm>
 
+    <modules>
+        <module>audit-sdk-core</module>
+        <module>audit-sdk-spring-boot-3</module>
+        <module>audit-sdk-spring-boot-4</module>
+    </modules>
+
     <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>17</java.version>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
-        <spring.boot.version>3.3.0</spring.boot.version>
+        <maven.compiler.release>17</maven.compiler.release>
+
+        <!-- Libraries shared by every module (framework-neutral). -->
+        <kafka-clients.version>3.7.0</kafka-clients.version>
+        <jackson.version>2.17.1</jackson.version>
+        <jakarta-validation.version>3.0.2</jakarta-validation.version>
+        <slf4j.version>2.0.13</slf4j.version>
+
+        <!-- Test libs (kept independent of any Boot BOM so core stays Spring-free). -->
+        <junit.version>5.10.2</junit.version>
+        <assertj.version>3.25.3</assertj.version>
+        <mockito.version>5.11.0</mockito.version>
     </properties>
 
-    <dependencies>
-        <!-- Spring Boot autoconfigure: the SDK is a starter -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-autoconfigure</artifactId>
-            <version>${spring.boot.version}</version>
-        </dependency>
-
-        <!-- Spring for Kafka. spring-kafka pulls in kafka-clients transitively;
-             we let the consuming app supply the Kafka runtime version. -->
-        <dependency>
-            <groupId>org.springframework.kafka</groupId>
-            <artifactId>spring-kafka</artifactId>
-            <version>3.2.0</version>
-        </dependency>
-
-        <!-- Kafka client marked provided: the APP supplies the runtime version,
-             so the SDK does not force one onto the app's classpath.
-             (See fail-fast note in README — the app MUST provide this.) -->
-        <dependency>
-            <groupId>org.apache.kafka</groupId>
-            <artifactId>kafka-clients</artifactId>
-            <version>3.7.0</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <!-- Bean Validation (Hibernate Validator) for SDK-side schema validation -->
-        <dependency>
-            <groupId>org.hibernate.validator</groupId>
-            <artifactId>hibernate-validator</artifactId>
-            <version>8.0.1.Final</version>
-        </dependency>
-        <dependency>
-            <groupId>org.glassfish.expressly</groupId>
-            <artifactId>expressly</artifactId>
-            <version>5.0.0</version>
-        </dependency>
-
-        <!-- JSON serialization support (JavaTimeModule for Instant) -->
-        <dependency>
-            <groupId>com.fasterxml.jackson.datatype</groupId>
-            <artifactId>jackson-datatype-jsr310</artifactId>
-            <version>2.17.1</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>2.0.13</version>
-        </dependency>
-
-        <!-- Configuration metadata generation for IDE autocomplete of audit.* props -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-configuration-processor</artifactId>
-            <version>${spring.boot.version}</version>
-            <optional>true</optional>
-        </dependency>
-
-        <!-- Test: JUnit 5, AssertJ, Mockito, spring-test (ApplicationContextRunner) -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <version>${spring.boot.version}</version>
-            <scope>test</scope>
-        </dependency>
-
-        <!-- Test: embedded Kafka broker for end-to-end serialization tests -->
-        <dependency>
-            <groupId>org.springframework.kafka</groupId>
-            <artifactId>spring-kafka-test</artifactId>
-            <version>3.2.0</version>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
-
-    <!--
-      Distribution: JitPack. There is no distributionManagement / deploy step —
-      JitPack builds this repo on demand (see jitpack.yml) and serves the artifacts
-      under groupId com.github.Edward-Hanson. Consumers just add the jitpack.io
-      repository and the dependency; no credentials.
-    -->
-
     <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.13.0</version>
-            </plugin>
-
-            <!-- Attach a sources jar so consumers can step into SDK code. -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-source-plugin</artifactId>
-                <version>3.3.1</version>
-                <executions>
-                    <execution>
-                        <id>attach-sources</id>
-                        <goals>
-                            <goal>jar-no-fork</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <!-- Attach a javadoc jar so consumers get IDE hovers on AuditClient etc. -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.7.0</version>
-                <configuration>
-                    <doclint>none</doclint>
-                    <quiet>true</quiet>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>attach-javadocs</id>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.13.0</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>3.2.5</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>build-helper-maven-plugin</artifactId>
+                    <version>3.5.0</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>3.3.1</version>
+                    <executions>
+                        <execution>
+                            <id>attach-sources</id>
+                            <goals>
+                                <goal>jar-no-fork</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>3.7.0</version>
+                    <configuration>
+                        <doclint>none</doclint>
+                        <quiet>true</quiet>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>attach-javadocs</id>
+                            <goals>
+                                <goal>jar</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </pluginManagement>
     </build>
 </project>

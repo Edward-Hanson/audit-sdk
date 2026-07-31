@@ -9,6 +9,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 _Nothing yet._
 
+## [0.7.0] - 2026-07-31
+
+Adds **Spring Boot 4 support** by splitting the SDK into a framework-neutral core and one
+thin starter per Boot generation. No changes to the `audit.*` / `entra.*` configuration or
+the `AuditClient` API — but the **dependency coordinates change**, so consumers must update
+their build file.
+
+### Added
+
+- **`audit-sdk-spring-boot-4`** — a starter compiled against Spring Boot 4 (Spring
+  Framework 7, Jakarta EE 11). Works across all of Boot 4.x.
+- **`audit-sdk-core`** — a new framework-neutral module (no Spring) holding all the audit
+  logic. Compiled once and shared by both starters.
+
+### Changed
+
+- **Dependency coordinates.** The build is now multi-module, so the groupId is
+  `com.github.Edward-Hanson.audit-sdk` and you pick the artifact for your Boot generation:
+  `audit-sdk-spring-boot-3` (Boot 3.1+) or `audit-sdk-spring-boot-4` (Boot 4.x). The old
+  single `com.github.Edward-Hanson:audit-sdk` coordinate is retired.
+- **Spring dependencies are now `provided`**, so within a generation the SDK adopts the
+  exact Boot minor your app uses (no pinned Spring version dragged in).
+- **Dropped `spring-kafka`** — the SDK now produces with the raw `kafka-clients` producer.
+  This is what lets one core run under both Boot 3 (kafka-clients 3.x) and Boot 4
+  (kafka-clients 4.x), and means the SDK registers no `ProducerFactory`/`KafkaTemplate`
+  beans, so it can never interfere with your app's own Kafka autoconfiguration.
+
+### Notes
+
+- The Kafka wire format is unchanged (plain JSON, ISO-8601 timestamps, enum by name, null
+  key), so this is transparent to the audit consumer.
+- Both starters are built and tested against real Boot 3 and Boot 4 in CI.
+
 ## [0.6.0] - 2026-07-20
 
 Breaking — a new required property, and permission enforcement on the audit service.

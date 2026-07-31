@@ -1,7 +1,8 @@
 name: Build & Test
 
-# Verifies every push and pull request: compiles the SDK and runs the full test
-# suite (including the embedded-Kafka serialization test). Publishing is handled
+# Verifies every push and pull request. `mvn verify` builds the whole reactor, so it
+# compiles and tests the framework-neutral core, the Boot 3 starter (against Spring Boot 3),
+# and the Boot 4 starter (against Spring Boot 4) in one run. Publishing is handled
 # separately by publish.yml on release.
 on:
   push:

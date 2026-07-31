@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.github.Edward-Hanson.audit-sdk</groupId>
+        <artifactId>audit-sdk-parent</artifactId>
+        <version>0.7.0</version>
+    </parent>
+
+    <artifactId>audit-sdk-core</artifactId>
+    <name>Audit SDK :: core</name>
+    <description>Framework-neutral audit logic: event model, SDK-side validation, the Kafka
+        producer path, and Entra registration. No Spring dependency — compiled once, runs under
+        any Spring Boot generation via one of the starter modules.</description>
+
+    <dependencies>
+        <!-- Kafka client: PROVIDED. The consuming app supplies the runtime version (3.x under
+             Boot 3, 4.x under Boot 4). The core touches only the long-stable producer API. -->
+        <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka-clients</artifactId>
+            <version>${kafka-clients.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- JSON serialization (JavaTime-aware, ISO-8601 timestamps). -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+
+        <!-- Bean Validation API (SDK-side schema validation). Compiled against 3.0 so the same
+             bytecode is binary-compatible with Jakarta Validation 3.0 (Boot 3) and 3.1 (Boot 4). -->
+        <dependency>
+            <groupId>jakarta.validation</groupId>
+            <artifactId>jakarta.validation-api</artifactId>
+            <version>${jakarta-validation.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+
+        <!-- Bean Validation provider, shipped at RUNTIME so validation works out of the box even
+             in a service without spring-boot-starter-validation. The consuming app's Boot BOM
+             overrides the version (Hibernate Validator 8.x under Boot 3, 9.x under Boot 4). -->
+        <dependency>
+            <groupId>org.hibernate.validator</groupId>
+            <artifactId>hibernate-validator</artifactId>
+            <version>8.0.1.Final</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.expressly</groupId>
+            <artifactId>expressly</artifactId>
+            <version>5.0.0</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- Test scope (kafka-clients is already available to tests via the provided dep above). -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <version>${assertj.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>${mockito.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>

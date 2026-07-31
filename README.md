@@ -7,10 +7,25 @@ before sending, then serializes it to JSON and produces it to Kafka.
 ## Requirements
 
 - **Java 17+**
-- **Spring Boot 3.x** — any 3.x version. The SDK adapts to your app's Spring Boot
-  version (built against 3.3, verified to run on 3.1+); it does not pin one for you.
-- **Kafka broker** reachable from your app; **kafka-clients 3.x** (arrives
-  transitively via `spring-kafka` — see [Kafka client on the classpath](#kafka-client-on-the-classpath))
+- **Spring Boot 3.1+ or Spring Boot 4.x.** The SDK ships **one artifact per Boot
+  generation** — pick the one matching your app (see [Install](#install)). Within a
+  generation the SDK adapts to your app's exact Boot version (Spring deps are
+  `provided`), so it works across all of Boot 3.x, and all of Boot 4.x.
+- **Kafka broker** reachable from your app; **kafka-clients** (3.x under Boot 3, 4.x
+  under Boot 4) — supplied by your app. The SDK uses the raw Kafka producer, not
+  `spring-kafka` (see [Kafka client on the classpath](#kafka-client-on-the-classpath)).
+
+## How it's built (why there are two artifacts)
+
+Boot 3 → Boot 4 is a major break (Spring Framework 6 → 7, Jakarta EE 10 → 11), so a
+single jar can't reliably span both. The SDK is therefore split:
+
+- **`audit-sdk-core`** — all the real logic (event model, validation, the Kafka
+  producer path, Entra registration). Framework-neutral: **zero Spring**, compiled
+  once, identical for both generations.
+- **`audit-sdk-spring-boot-3`** / **`audit-sdk-spring-boot-4`** — a thin layer of
+  Spring auto-configuration (one shared source, compiled against each generation).
+  You depend on exactly one of these; it pulls in `audit-sdk-core` transitively.
 
 ## What it does
 
@@ -44,11 +59,19 @@ before sending, then serializes it to JSON and produces it to Kafka.
 ## Install
 
 The SDK is distributed via **[JitPack](https://jitpack.io/#Edward-Hanson/audit-sdk)** —
-open source, **no credentials required**. Add the JitPack repository and the dependency.
-The `version` is a released tag of this repo (e.g. `v0.1.0`), or `master-SNAPSHOT`
-for the latest commit.
+open source, **no credentials required**. Add the JitPack repository and the **one**
+dependency matching your Spring Boot generation. The `version` is a released tag of this
+repo (e.g. `v0.7.0`), or `master-SNAPSHOT` for the latest commit.
 
-**Maven** (`pom.xml`):
+Because this is a multi-module build, the groupId is `com.github.Edward-Hanson.audit-sdk`
+(note the `.audit-sdk` suffix) and the artifactId selects the generation:
+
+| Your app | Dependency artifactId |
+| --- | --- |
+| Spring Boot **3.1+** | `audit-sdk-spring-boot-3` |
+| Spring Boot **4.x** | `audit-sdk-spring-boot-4` |
+
+**Maven** (`pom.xml`) — Boot 3 example (use `audit-sdk-spring-boot-4` for Boot 4):
 
 ```xml
 <repositories>
@@ -59,9 +82,9 @@ for the latest commit.
 </repositories>
 
 <dependency>
-    <groupId>com.github.Edward-Hanson</groupId>
-    <artifactId>audit-sdk</artifactId>
-    <version>v0.6.0</version>
+    <groupId>com.github.Edward-Hanson.audit-sdk</groupId>
+    <artifactId>audit-sdk-spring-boot-3</artifactId>
+    <version>v0.7.0</version>
 </dependency>
 ```
 
@@ -79,7 +102,8 @@ repositories {
 }
 
 dependencies {
-    implementation("com.github.Edward-Hanson:audit-sdk:v0.6.0")
+    // Boot 3 app; use audit-sdk-spring-boot-4 for a Boot 4 app.
+    implementation("com.github.Edward-Hanson.audit-sdk:audit-sdk-spring-boot-3:v0.7.0")
 }
 ```
 </details>
@@ -107,8 +131,8 @@ follow the latest `master` and pick up new commits when you rebuild, depend on
 </repositories>
 
 <dependency>
-    <groupId>com.github.Edward-Hanson</groupId>
-    <artifactId>audit-sdk</artifactId>
+    <groupId>com.github.Edward-Hanson.audit-sdk</groupId>
+    <artifactId>audit-sdk-spring-boot-3</artifactId> <!-- or audit-sdk-spring-boot-4 -->
     <version>master-SNAPSHOT</version>
 </dependency>
 ```
@@ -119,15 +143,18 @@ Force it any time with `mvn -U`.
 
 ### Kafka client on the classpath
 
-The SDK depends on `spring-kafka` (compile scope), which brings `kafka-clients`
-onto your app's classpath transitively — so a normal Spring Boot service needs no
-extra Kafka dependency to use this starter. (The `kafka-clients` entry in the SDK's
-own POM is marked `provided`; that only affects how the SDK itself is built and does
-**not** remove `kafka-clients` from your app — it still arrives via `spring-kafka`.)
+The SDK produces to Kafka with the **raw `kafka-clients` producer** — it does **not**
+depend on `spring-kafka`. `kafka-clients` is marked `provided`, so **your app must have
+`kafka-clients` on its classpath** (any normal Spring Boot service that uses Kafka already
+does; it also arrives with `spring-kafka` if you use that elsewhere).
 
-If your app already manages a specific Kafka version (directly or via
-`spring-boot-dependencies`), that version wins through normal Maven/Gradle
-resolution; the SDK does not pin one for you. Supported: kafka-clients 3.x.
+Your app's managed Kafka version wins through normal Maven/Gradle resolution — the SDK
+does not pin one. Supported: **kafka-clients 3.x** (typical under Boot 3) and **4.x**
+(typical under Boot 4); the SDK touches only the long-stable producer API common to both.
+
+Dropping `spring-kafka` is also why the SDK **cannot** interfere with your app's own Kafka
+setup: it registers no `ProducerFactory`/`KafkaTemplate` beans at all. The audit producer
+is a plain object owned by the single `AuditClient` bean and closed on shutdown.
 
 ## Configure
 

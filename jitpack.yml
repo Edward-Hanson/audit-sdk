@@ -1,10 +1,10 @@
 # JitPack build config. https://jitpack.io/docs/BUILDING/
-# Build the SDK on JDK 17 and skip tests here — the full test suite (including the
-# embedded-Kafka test) already runs in GitHub Actions (.github/workflows/build.yml),
-# and running an embedded broker on JitPack's shared builders is slow/flaky.
+# Builds all modules (core + both Boot starters) and publishes each as a separate artifact
+# under group com.github.Edward-Hanson.audit-sdk. Tests are skipped here (they run in CI);
+# JitPack's shared builders only need to produce the jars.
 jdk:
   - openjdk17
 install:
-  # Use the Maven Wrapper (pinned to 3.9.9) — JitPack's system Maven is too old for
+  # Use the Maven Wrapper (pinned) — JitPack's system Maven is too old for
   # maven-compiler-plugin 3.13.0 (needs Maven >= 3.6.3).
   - ./mvnw install -DskipTests -B
