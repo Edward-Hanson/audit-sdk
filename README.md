@@ -112,6 +112,10 @@ The first time anyone requests a version, JitPack builds this repo on demand (se
 `jitpack.yml`) and caches the result; subsequent pulls are instant. Build status and
 available versions: https://jitpack.io/#Edward-Hanson/audit-sdk
 
+> **Getting a 502 / "Could not transfer artifact" on a brand-new version?** The
+> on-demand build hasn't finished yet, and Maven caches that failure. See
+> [Pre-warming the JitPack build](#pre-warming-the-jitpack-build) for the fix.
+
 ### Tracking the latest `master` (snapshots)
 
 Released tags (`v0.1.0`, …) are **immutable** — recommended for production. To instead
@@ -331,6 +335,68 @@ version so the vocabulary stays governed across all services.
 - Commit the Kafka offset only after the DB write succeeds, so a crash re-reads
   rather than loses an event.
 - The value is plain JSON; deserialize into your own `AuditEvent` shape.
+
+## Releasing
+
+JitPack builds from **git tags**, so a release is a tag — there is nothing to publish
+by hand. Tags are immutable: a bad release cannot be overwritten, only superseded by
+a new version.
+
+1. Bump the version in **all four poms** — the root `<version>`, plus the `<parent>`
+   `<version>` in `audit-sdk-core`, `audit-sdk-spring-boot-3`, and
+   `audit-sdk-spring-boot-4`. They must match or the build won't resolve.
+2. Update the version in this README's install snippets (the Maven `<version>`, the
+   Gradle coordinate, and the example tag above them).
+3. Move the `Unreleased` block in [CHANGELOG.md](CHANGELOG.md) under the new version
+   heading, and add its link reference at the bottom of the file.
+4. `mvn clean verify` — all four modules must pass.
+5. Commit, then tag and push:
+
+   ```bash
+   git tag -a v0.8.0 -m "v0.8.0 - <summary>"
+   git push origin master
+   git push origin v0.8.0
+   ```
+
+6. **Pre-warm the JitPack build** (see below).
+7. Update the [Audit SDK - Spring Boot](https://amali-tech.atlassian.net/wiki/spaces/AED/pages/2894594068)
+   Confluence page — the version references and anything that changed behaviour.
+
+### Pre-warming the JitPack build
+
+JitPack builds each tag **lazily, on first request**. Whoever bumps their dependency
+first therefore triggers the build and gets an HTTP **502** while it queues — and
+Maven then *caches that failure*, so their build keeps failing with the same 502 even
+after JitPack goes green. Avoid that entirely by requesting the artifact yourself
+right after pushing the tag:
+
+```bash
+V=v0.8.0
+for A in audit-sdk-spring-boot-3 audit-sdk-spring-boot-4; do
+  curl -s -o /dev/null "https://jitpack.io/com/github/Edward-Hanson/audit-sdk/$A/$V/$A-$V.pom"
+done
+```
+
+Expect a 502 on that first call — it is the trigger, not a failure. Then watch until
+the status is `ok` (a few minutes; free-tier builds queue):
+
+```bash
+curl -s "https://jitpack.io/api/builds/com.github.Edward-Hanson.audit-sdk/v0.8.0"
+```
+
+Only announce the version once that reports `ok`. Full log and status:
+https://jitpack.io/#Edward-Hanson/audit-sdk
+
+**If someone already hit the 502**, JitPack going green is not enough — Maven cached
+the failure as a `.lastUpdated` marker. They need to clear it:
+
+```bash
+# force a remote re-check
+mvn -U clean install
+
+# if that isn't enough, delete the cached failure and retry
+rm -rf ~/.m2/repository/com/github/Edward-Hanson/audit-sdk/*/<version>
+```
 
 ## License
 
