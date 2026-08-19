@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 _Nothing yet._
 
+## [0.8.0] - 2026-08-19
+
+Adds eight actions to the audit vocabulary. **Additive and backward compatible** — no API,
+configuration, or wire-format changes, so upgrading is just a version bump.
+
+### Added
+
+- **Eight new `AuditAction` values**: `APPLY`, `REVIEW`, `RECOMMEND`, `DEFER`, `DISBURSE`,
+  `PAY`, `SERVICE`, `BLOCK` — covering application intake, multi-step review/recommendation
+  before a decision, deferral, funds movement, post-issuance servicing, and access blocking.
+  Purely additive; existing values and the wire format (enum by name) are unchanged, and the
+  audit service accepts them with no change (it persists `action` as a free string).
+
 ## [0.7.0] - 2026-07-31
 
 Adds **Spring Boot 4 support** by splitting the SDK into a framework-neutral core and one
@@ -242,7 +255,9 @@ no schema registry.
 </dependency>
 ```
 
-[Unreleased]: https://github.com/Edward-Hanson/audit-sdk/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/Edward-Hanson/audit-sdk/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/Edward-Hanson/audit-sdk/releases/tag/v0.8.0
+[0.7.0]: https://github.com/Edward-Hanson/audit-sdk/releases/tag/v0.7.0
 [0.6.0]: https://github.com/Edward-Hanson/audit-sdk/releases/tag/v0.6.0
 [0.5.0]: https://github.com/Edward-Hanson/audit-sdk/releases/tag/v0.5.0
 [0.4.0]: https://github.com/Edward-Hanson/audit-sdk/releases/tag/v0.4.0

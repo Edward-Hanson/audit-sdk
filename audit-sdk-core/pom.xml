@@ -7,7 +7,7 @@
     <parent>
         <groupId>com.github.Edward-Hanson.audit-sdk</groupId>
         <artifactId>audit-sdk-parent</artifactId>
-        <version>0.7.0</version>
+        <version>0.8.0</version>
     </parent>
 
     <artifactId>audit-sdk-core</artifactId>

@@ -23,11 +23,17 @@ public enum AuditAction {
     ACTIVATE,
     DEACTIVATE,
 
+    // Application / request lifecycle
+    APPLY,
+
     // Approval / decision workflow
     SUBMIT,
+    REVIEW,
+    RECOMMEND,
     APPROVE,
     REJECT,
     DENY,
+    DEFER,
     CANCEL,
 
     // Ownership / assignment
@@ -37,6 +43,7 @@ public enum AuditAction {
     // Access / state locks
     LOCK,
     UNLOCK,
+    BLOCK,
     SUSPEND,
     RESTORE,
 
@@ -46,5 +53,12 @@ public enum AuditAction {
 
     // Permission changes
     GRANT,
-    REVOKE
+    REVOKE,
+
+    // Funds movement
+    DISBURSE,
+    PAY,
+
+    // Post-issuance servicing
+    SERVICE
 }

@@ -12,6 +12,8 @@ import org.apache.kafka.clients.producer.Callback;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
 
 import java.time.Instant;
@@ -89,5 +91,37 @@ class AuditWireFormatTest {
                 // Instant serialized as ISO-8601, NOT epoch millis.
                 .contains("\"timestamp\":\"2026-07-13T10:15:30Z\"")
                 .doesNotContain("__TypeId__");
+    }
+
+    /**
+     * Every value in the vocabulary must survive validation and go on the wire as its own name —
+     * the consumer stores {@code action} as that raw string. Runs over {@code values()} so newly
+     * added actions are covered without touching this test.
+     */
+    @ParameterizedTest
+    @EnumSource(AuditAction.class)
+    @SuppressWarnings("unchecked")
+    void publishesEveryActionByName(AuditAction action) {
+        Producer<String, String> producer = mock(Producer.class);
+        when(producer.send(any(ProducerRecord.class))).thenReturn(CompletableFuture.completedFuture(null));
+
+        AuditProperties props = new AuditProperties();
+        props.setDisplayName("Payroll");
+        props.setFailOnError(true);
+        AuditClient client = new AuditClient(
+                "audit_service_it", "payroll-client-id", producer, AuditJson.mapper(),
+                props, VALIDATOR, TransactionHook.none());
+
+        client.send(AuditEventBuilder.builder()
+                .userName("jane.admin")
+                .userId(42L)
+                .action(action)
+                .entityType("LOAN")
+                .entityId("99")
+                .build());
+
+        ArgumentCaptor<ProducerRecord<String, String>> captor = ArgumentCaptor.forClass(ProducerRecord.class);
+        verify(producer).send(captor.capture());
+        assertThat(captor.getValue().value()).contains("\"action\":\"" + action.name() + "\"");
     }
 }

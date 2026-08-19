@@ -61,7 +61,7 @@ single jar can't reliably span both. The SDK is therefore split:
 The SDK is distributed via **[JitPack](https://jitpack.io/#Edward-Hanson/audit-sdk)** —
 open source, **no credentials required**. Add the JitPack repository and the **one**
 dependency matching your Spring Boot generation. The `version` is a released tag of this
-repo (e.g. `v0.7.0`), or `master-SNAPSHOT` for the latest commit.
+repo (e.g. `v0.8.0`), or `master-SNAPSHOT` for the latest commit.
 
 Because this is a multi-module build, the groupId is `com.github.Edward-Hanson.audit-sdk`
 (note the `.audit-sdk` suffix) and the artifactId selects the generation:
@@ -84,7 +84,7 @@ Because this is a multi-module build, the groupId is `com.github.Edward-Hanson.a
 <dependency>
     <groupId>com.github.Edward-Hanson.audit-sdk</groupId>
     <artifactId>audit-sdk-spring-boot-3</artifactId>
-    <version>v0.7.0</version>
+    <version>v0.8.0</version>
 </dependency>
 ```
 
@@ -103,7 +103,7 @@ repositories {
 
 dependencies {
     // Boot 3 app; use audit-sdk-spring-boot-4 for a Boot 4 app.
-    implementation("com.github.Edward-Hanson.audit-sdk:audit-sdk-spring-boot-3:v0.7.0")
+    implementation("com.github.Edward-Hanson.audit-sdk:audit-sdk-spring-boot-3:v0.8.0")
 }
 ```
 </details>
@@ -311,11 +311,14 @@ audited). Allowed values:
 CREATE, UPDATE, DELETE,
 ARCHIVE, UNARCHIVE,
 ACTIVATE, DEACTIVATE,
-SUBMIT, APPROVE, REJECT, DENY, CANCEL,
+APPLY,
+SUBMIT, REVIEW, RECOMMEND, APPROVE, REJECT, DENY, DEFER, CANCEL,
 ASSIGN, UNASSIGN,
-LOCK, UNLOCK, SUSPEND, RESTORE,
+LOCK, UNLOCK, BLOCK, SUSPEND, RESTORE,
 PUBLISH, UNPUBLISH,
-GRANT, REVOKE
+GRANT, REVOKE,
+DISBURSE, PAY,
+SERVICE
 ```
 
 Need another state-change action? Add it to `AuditAction` and release a new SDK

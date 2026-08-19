@@ -9,7 +9,7 @@
          com.github.Edward-Hanson.audit-sdk for inter-module (and consumer) resolution to work. -->
     <groupId>com.github.Edward-Hanson.audit-sdk</groupId>
     <artifactId>audit-sdk-parent</artifactId>
-    <version>0.7.0</version>
+    <version>0.8.0</version>
     <packaging>pom</packaging>
 
     <name>Audit SDK (parent)</name>
